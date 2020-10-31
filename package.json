@@ -1,10 +1,10 @@
 {
-  "name": "valvas-export-service",
-  "version": "0.6.0",
-  "description": "Microservice that exports news items for the Valvas application",
+  "name": "themis-export-service",
+  "version": "1.0.0",
+  "description": "Microservice that exports data from Kaleidos to be published on Themis",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kanselarij-vlaanderen/valvas-export-service.git"
+    "url": "git+https://github.com/kanselarij-vlaanderen/themis-export-service.git"
   },
   "author": "redpencil.io",
   "license": "MIT",
