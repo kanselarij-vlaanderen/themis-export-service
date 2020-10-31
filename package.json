@@ -1,0 +1,19 @@
+{
+  "name": "valvas-export-service",
+  "version": "0.6.0",
+  "description": "Microservice that exports news items for the Valvas application",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kanselarij-vlaanderen/valvas-export-service.git"
+  },
+  "author": "redpencil.io",
+  "license": "MIT",
+  "dependencies": {
+    "@lblod/mu-auth-sudo": "^0.2.0",
+    "event-stream": "^4.0.1",
+    "fs-extra": "^8.1.0",
+    "lodash.uniq": "^4.5.0",
+    "lodash.groupby": "^4.6.0",
+    "request": "^2.88.0"
+  }
+}
