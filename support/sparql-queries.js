@@ -455,7 +455,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
-        ?documentContainer a dossier:Stuk ;
+        ?documentContainer a dossier:Serie ;
           dossier:collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
           mu:uuid ?documentContainerUuid .
       }
@@ -472,8 +472,8 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
-        ?documentContainer a dossier:Stuk ;
-          dossier:Collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
+        ?documentContainer a dossier:Serie ;
+          dossier:collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
           ext:documentType ?documentType .
       }
     }`, graph);
