@@ -275,7 +275,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
 
         INSERT {
           GRAPH <${graph}> {
-            <${publicAgendaitem}> prov:wasRevisionOf ?previousPublicAgenda .
+            <${publicAgendaitem}> prov:wasRevisionOf ?previousPublicAgendaitem .
           }
         } WHERE {
           GRAPH <${config.export.graphs.public}> {
