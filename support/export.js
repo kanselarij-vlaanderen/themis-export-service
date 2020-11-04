@@ -14,7 +14,7 @@ async function generateExport(job) {
 
     if (meetingDate < config.export.historicDates.newsitems) {
       console.log(`Public export didn't exist yet on ${meetingDate}. Nothing will be exported.`);
-      return;
+      return null;
     }
 
     const timestamp = new Date().toISOString().replace(/\D/g, '');
@@ -46,8 +46,10 @@ async function generateExport(job) {
     await addGraph(job.graph, config.export.graphs.public); // publication activity data is required for next runs
     await cleanGraph(job.graph);
     await createTtlToDeltaTask([file]);
+    return publicResources.publicationActivity.uri;
   } else {
     console.log(`No export scope provided for job <${job.uri}>. Nothing to export.`);
+    return null;
   }
 }
 
@@ -76,6 +78,7 @@ async function generatePublicAgendaAndAgendaitems(meeting, includeAnnouncements,
   console.log('-----------------------------------');
 
   return {
+    publicationActivity: publication,
     agenda: publicAgenda,
     agendaitems: publicAgendaitems
   };

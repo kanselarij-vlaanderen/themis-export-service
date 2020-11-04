@@ -125,8 +125,10 @@ async function executeJob(job) {
     job.graph = config.export.graphs.tmp(timestamp);
 
     await updateJobStatus(job.uri, config.export.job.statuses.ongoing);
-    await setJobExportGraph(job.uri, job.graph);
-    await generateExport(job);
+    await setGeneratedResource(job.uri, job.graph);
+    const publicationActivity = await generateExport(job);
+    if (publicationActivity)
+      await setGeneratedResource(job.uri, publicationActivity);
     await updateJobStatus(job.uri, config.export.job.statuses.success);
     console.log(`Successfully finished job <${job.uri}>`);
   } catch (e) {
@@ -159,13 +161,13 @@ async function updateJobStatus(uri, status) {
 }
 
 
-async function setJobExportGraph(uri, graph) {
+async function setGeneratedResource(uri, resource) {
   await update(`
   PREFIX prov: <http://www.w3.org/ns/prov#>
 
   INSERT DATA {
     GRAPH <${config.export.graphs.job}> {
-        ${sparqlEscapeUri(uri)} prov:generated ${sparqlEscapeUri(graph)}.
+        ${sparqlEscapeUri(uri)} prov:generated ${sparqlEscapeUri(resource)}.
     }
   }`);
 }
