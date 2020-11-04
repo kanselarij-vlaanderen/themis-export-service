@@ -27,17 +27,17 @@ export default {
     },
     codelists: {
       activityType: {
-        publication: 'http://themis.vlaanderen.be/id/activity-types/a22bbaae-ab5d-4d93-b658-3d31485bea7b'
+        publication: 'http://themis.vlaanderen.be/id/concept/activity-type/fb1916be-0a42-4a52-a69d-92764eba4955'
       },
       agendaStatus: {
-        public: 'http://themis.vlaanderen.be/id/agenda-status/212d0a6e-0d4a-43e3-8e7b-f7b3ac03b9cb'
+        public: 'http://themis.vlaanderen.be/id/concept/agenda-status/de6fc320-cfb9-47a6-af25-e063b80992f7'
       },
       agendaitemType: {
-        nota: 'http://themis.vlaanderen.be/id/agendapunt-types/f51aaa40-58d5-4fd0-97bd-04aa7656dd23',
-        announcement: 'http://themis.vlaanderen.be/id/agendapunt-types/c04002f5-94c4-4be6-a988-dd5783ad9b87'
+        nota: 'http://themis.vlaanderen.be/id/concept/agendapunt-type/dd47a8f8-3ad2-4d5a-8318-66fc02fe80fd',
+        announcement: 'http://themis.vlaanderen.be/id/concept/agendapunt-type/8f8adcf0-58ef-4edc-9e36-0c9095fd76b0'
       },
       documentType: {
-        newsitem: 'http://themis.vlaanderen.be/id/dossier-stuk-types/fd61576a-0611-459b-8f4c-222257504b20'
+        newsitem: 'http://themis.vlaanderen.be/id/concept/document-type/63d628cb-a594-4166-8b4e-880b4214fc5b'
       }
     },
     historicDates: {
