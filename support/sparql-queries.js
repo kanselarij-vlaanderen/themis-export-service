@@ -367,8 +367,10 @@ async function insertNewsitem(newsitem, graph) {
     optionalStatements.push(`<${newsitem.uri}> nie:htmlContent ${sparqlEscapeString(newsitem.richtext)} .`);
   if (newsitem.text)
     optionalStatements.push(`<${newsitem.uri}> prov:value ${sparqlEscapeString(newsitem.text)} .`);
+  if (newsitem.title)
+    optionalStatements.push(`<${newsitem.uri}> dct:title ${sparqlEscapeString(newsitem.title)} .`);
   if (newsitem.alternate)
-    optionalStatements.push(`<${newsitem.uri}> dct:alternate ${sparqlEscapeUri(newsitem.alternate)} .`);
+    optionalStatements.push(`<${newsitem.uri}> dct:alternate ${sparqlEscapeString(newsitem.alternate)} .`);
   if (newsitem.themes.length)
     optionalStatements.push(...newsitem.themes.map(theme => `<${newsitem.uri}> dct:subject ${sparqlEscapeUri(theme.uri)} .`));
   if (newsitem.mandatees.length)
