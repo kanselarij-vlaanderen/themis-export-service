@@ -36,12 +36,14 @@ async function getMeeting({ uri, id }) {
 async function copyMeeting(uri, graph) {
   await copyToLocalGraph(`
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 
     CONSTRUCT {
       ${sparqlEscapeUri(uri)} a besluit:Vergaderactiviteit ;
         mu:uuid ?uuid ;
-        besluit:geplandeStart ?geplandeStart .
+        besluit:geplandeStart ?geplandeStart ;
+        besluitvorming:isGehoudenDoor <http://themis.vlaanderen.be/id/bestuursorgaan/7f2c82aa-75ac-40f8-a6c3-9fe539163025> .
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
