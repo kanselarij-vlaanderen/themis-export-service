@@ -7,29 +7,28 @@ import sq from './sparql-queries';
 import { writeToFile, clean as cleanGraph, add as addGraph } from './graph-helpers';
 
 async function generateExport(job) {
-  if (job.scope && job.scope.length) {
-    const meeting = await sq.getMeeting({ uri: job.meeting });
-    const meetingDate = new Date(Date.parse(meeting.geplandeStart));
-    console.log(`Generating export for meeting <${job.meeting}> of ${meetingDate} with scope ${JSON.stringify(job.scope)}`);
+  const meeting = await sq.getMeeting({ uri: job.meeting });
+  const meetingDate = new Date(Date.parse(meeting.geplandeStart));
+  console.log(`Generating export for meeting <${job.meeting}> of ${meetingDate} with scope ${JSON.stringify(job.scope)}`);
 
-    if (meetingDate < config.export.historicDates.newsitems) {
-      console.log(`Public export didn't exist yet on ${meetingDate}. Nothing will be exported.`);
-      return null;
-    }
+  if (meetingDate < config.export.historicDates.newsitems) {
+    console.log(`Public export didn't exist yet on ${meetingDate}. Nothing will be exported.`);
+    return null;
+  }
 
-    const timestamp = new Date().toISOString().replace(/\D/g, '');
+  const timestamp = new Date().toISOString().replace(/\D/g, '');
 
-    await sq.copyMeeting(job.meeting, job.graph);
+  await sq.copyMeeting(job.meeting, job.graph);
 
-    const includeAnnouncements = meetingDate >= config.export.historicDates.announcements;
-    if (!includeAnnouncements) {
-      console.log(`Public export didn't include announcements yet on ${meetingDate}. Announcements will not be exported.`);
-    }
-    const publicResources = await generatePublicAgendaAndAgendaitems(job.meeting, includeAnnouncements, job.graph);
+  const includeAnnouncements = meetingDate >= config.export.historicDates.announcements;
+  if (!includeAnnouncements) {
+    console.log(`Public export didn't include announcements yet on ${meetingDate}. Announcements will not be exported.`);
+  }
+  const publication = await sq.insertPublicationActivity(job.meeting, job.graph);
 
-    if (job.scope.includes("newsitems")) {
-      publicResources.newsitems = await copyNewsitems(publicResources.agendaitems, job.graph);
-    }
+  if (job.scope.includes("newsitems")) {
+    const publicResources = await generatePublicAgendaAndAgendaitems(job.meeting, publication, includeAnnouncements, job.graph);
+    publicResources.newsitems = await copyNewsitems(publicResources.agendaitems, job.graph);
 
     if (job.scope.includes("documents")) {
       if (meetingDate < config.export.historicDates.documents) {
@@ -38,23 +37,19 @@ async function generateExport(job) {
         await copyDocuments(publicResources.newsitems, job.graph);
       }
     }
-
-    const meetingTimestamp = meetingDate.toISOString().replace(/\D/g, '');
-    const filename = `${timestamp.substring(0, 14)}-${timestamp.slice(14)}-${job.id}-${meetingTimestamp}.ttl`;
-    const file = `${config.export.directory}${filename}`;
-    await writeToFile(job.graph, file);
-    await addGraph(job.graph, config.export.graphs.public); // publication activity data is required for next runs
-    await cleanGraph(job.graph);
-    await createTtlToDeltaTask([file]);
-    return publicResources.publicationActivity.uri;
-  } else {
-    console.log(`No export scope provided for job <${job.uri}>. Nothing to export.`);
-    return null;
   }
+
+  const meetingTimestamp = meetingDate.toISOString().replace(/\D/g, '');
+  const filename = `${timestamp.substring(0, 14)}-${timestamp.slice(14)}-${job.id}-${meetingTimestamp}.ttl`;
+  const file = `${config.export.directory}${filename}`;
+  await writeToFile(job.graph, file);
+  await addGraph(job.graph, config.export.graphs.public); // publication activity data is required for next runs
+  await cleanGraph(job.graph);
+  await createTtlToDeltaTask([file]);
+  return publication.uri;
 }
 
-async function generatePublicAgendaAndAgendaitems(meeting, includeAnnouncements, graph) {
-  const publication = await sq.insertPublicationActivity(meeting, graph);
+async function generatePublicAgendaAndAgendaitems(meeting, publication, includeAnnouncements, graph) {
   const previousPublication = await sq.getPreviousPublicationActivity(meeting);
   const previousPublicationUri = previousPublication ? previousPublication.uri : null;
   if (previousPublicationUri)
@@ -78,7 +73,6 @@ async function generatePublicAgendaAndAgendaitems(meeting, includeAnnouncements,
   console.log('-----------------------------------');
 
   return {
-    publicationActivity: publication,
     agenda: publicAgenda,
     agendaitems: publicAgendaitems
   };
