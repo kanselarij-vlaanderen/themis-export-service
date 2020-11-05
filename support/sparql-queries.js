@@ -503,6 +503,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     PREFIX dbpedia: <http://dbpedia.org/ontology/>
     PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX dct: <http://purl.org/dc/terms/>
 
     CONSTRUCT {
       ${sparqlEscapeUri(piece.uri)} prov:value ?uploadFile .
@@ -510,7 +511,8 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
         mu:uuid ?uuidUploadFile ;
         nfo:fileName ?fileNameUploadFile ;
         nfo:fileSize ?sizeUploadFile ;
-        dbpedia:fileExtension ?extensionUploadFile .
+        dbpedia:fileExtension ?extensionUploadFile ;
+        dct:format ?format .
       ?physicalFile a nfo:FileDataObject ;
         mu:uuid ?uuidPhysicalFile ;
         nfo:fileName ?fileNamePhysicalFile ;
@@ -527,6 +529,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
           nfo:fileName ?fileNameUploadFile ;
           nfo:fileSize ?sizeUploadFile ;
           dbpedia:fileExtension ?extensionUploadFile ;
+          dct:format ?format ;
           ^nie:dataSource ?physicalFile .
         ?physicalFile a nfo:FileDataObject ;
           mu:uuid ?uuidPhysicalFile ;
