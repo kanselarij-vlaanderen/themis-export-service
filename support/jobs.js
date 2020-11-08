@@ -109,6 +109,7 @@ async function getJob(uuid) {
 
 async function executeJob(job) {
   try {
+    await updateJobStatus(job.uri, config.export.job.statuses.ongoing);
     const result = await query(`
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
@@ -128,7 +129,6 @@ async function executeJob(job) {
     const timestamp = new Date().toISOString().replace(/\D/g, '');
     job.graph = config.export.graphs.tmp(timestamp);
 
-    await updateJobStatus(job.uri, config.export.job.statuses.ongoing);
     await setGeneratedResource(job.uri, job.graph);
     const publicationActivity = await generateExport(job);
     if (publicationActivity)
