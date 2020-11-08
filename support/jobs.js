@@ -55,6 +55,10 @@ async function getNextScheduledJob() {
            dct:created ?created ;
            prov:used ?meeting ;
            adms:status ${sparqlEscapeUri(config.export.job.statuses.scheduled)} .
+      FILTER NOT EXISTS {
+        ?job a ext:PublicExportJob ;
+           adms:status ${sparqlEscapeUri(config.export.job.statuses.ongoing)} .
+      }
     }
   } ORDER BY ASC(?created) LIMIT 1`);
 
