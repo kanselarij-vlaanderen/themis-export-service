@@ -142,6 +142,17 @@ async function executeJob(job) {
   }
 }
 
+async function getSummary() {
+  const result = await query(`
+    SELECT ?status (COUNT(?s) as ?count) WHERE {
+      GRAPH <http://mu.semte.ch/graphs/kaleidos-export> {
+        ?s a <http://mu.semte.ch/vocabularies/ext/PublicExportJob> ;  <http://www.w3.org/ns/adms#status> ?status .
+      }
+    } GROUP BY ?status`);
+
+  return result.results.bindings.map(b => { return { status: b['status'].value, count: parseInt(b['count'].value) }; });
+}
+
 async function updateJobStatus(uri, status) {
   await update(`
   PREFIX dct: <http://purl.org/dc/terms/>
@@ -179,5 +190,7 @@ async function setGeneratedResource(uri, resource) {
 export {
   createJob,
   getNextScheduledJob,
-  executeJob
+  getJob,
+  executeJob,
+  getSummary
 }

@@ -1,5 +1,5 @@
 import { app, uuid, errorHandler } from 'mu';
-import { createJob, getNextScheduledJob, getJob, executeJob } from './support/jobs';
+import { createJob, getNextScheduledJob, getJob, executeJob, getSummary } from './support/jobs';
 import sq from './support/sparql-queries';
 import bodyParser from 'body-parser';
 
@@ -39,6 +39,13 @@ app.post('/meetings/:uuid/publication-activities', async function(req, res) {
       { error: `Could not find meeting with uuid ${meetingId} in Kaleidos`}
     );
   }
+});
+
+app.get('/public-export-jobs/summary', async function(req, res) {
+  const summary = await getSummary();
+  res.status(200).send({
+    data: summary
+  });
 });
 
 app.get('/public-export-jobs/:uuid', async function(req, res) {
