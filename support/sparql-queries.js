@@ -138,7 +138,7 @@ async function getPreviousPublicationActivity(meeting) {
 }
 
 async function getLatestAgendaOfMeeting(meeting) {
-  const agendas = parseResult(await queryKaleidos(`
+  let agendas = parseResult(await queryKaleidos(`
     PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
 
@@ -148,6 +148,20 @@ async function getLatestAgendaOfMeeting(meeting) {
         dct:title ?title .
     } ORDER BY DESC(?serialNumber) LIMIT 1
   `));
+
+  if (!agendas.length) {
+    console.log(`No agenda found. Trying pre-Kaleidos query to retrieve agenda for meeting <${meeting}>`);
+    agendas = parseResult(await queryKaleidos(`
+    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+    SELECT ?uri WHERE {
+      ?uri besluitvorming:isAgendaVoor ${sparqlEscapeUri(meeting)} ;
+           ext:finaleVersie "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
+     }
+    `));
+  }
   return agendas.length ? agendas[0] : null;
 }
 
@@ -295,7 +309,8 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
       newsletterInfo: agendaitem.newsletterInfo,
       number: agendaitem.number,
       type: agendaitem.type,
-      shortTitle: agendaitem.alternative
+      shortTitle: agendaitem.alternative,
+      title: agendaitem.title
     });
   }
 
@@ -352,7 +367,10 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
           ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> ;
                           besluitvorming:vindtPlaatsTijdens ?subcase .
           ?subcase ext:heeftBevoegde ?uri .
-          ?uri mandaat:rangorde ?priority .
+
+          OPTIONAL {
+              ?uri mandaat:rangorde ?priority .
+          }
         }
       }
     `));

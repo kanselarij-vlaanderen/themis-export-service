@@ -58,7 +58,7 @@ async function generatePublicAgendaAndAgendaitems(meeting, publication, includeA
     console.log(`Found a previous publication activity <${previousPublicationUri}> for this meeting`);
 
   const agenda = await sq.getLatestAgendaOfMeeting(meeting);
-  console.log(`Latest agenda found is agenda ${agenda.serialNumber} (<${agenda.uri}>). This agenda will be used as basis for the export.`);
+  console.log(`Latest agenda found is agenda ${agenda.serialNumber || ''} (<${agenda.uri}>). This agenda will be used as basis for the export.`);
 
   const publicAgenda = await sq.insertPublicAgenda(agenda, meeting, publication.uri, previousPublicationUri, graph);
   let agendaitems = await sq.getAgendaitemsWithNewsletterInfo(agenda);
@@ -71,7 +71,7 @@ async function generatePublicAgendaAndAgendaitems(meeting, publication, includeA
 
   console.log(`Public agenda <${publicAgenda.uri}>`);
   console.log('-----------------------------------');
-  publicAgendaitems.forEach(item => console.log(`[${item.number}] ${item.shortTitle} (${item.kaleidosUri})`));
+  publicAgendaitems.forEach(item => console.log(`[${item.number}] ${item.shortTitle || item.title} (${item.kaleidosUri})`));
   console.log('-----------------------------------');
 
   return {
@@ -152,23 +152,46 @@ async function copyDocuments(newsitems, graph) {
 function setPriorityOnNewsitems(newsitems) {
   const notas = newsitems.filter(item => item.agendaitem.type == config.export.codelists.agendaitemType.nota);
 
-  // Sort notas with mandatees by mandatee(s) priority
+  // Sort notas with mandatees
   const notasWithMandatees = notas.filter(item => item.mandatees.length > 0);
-  for (let nota of notasWithMandatees) {
-    nota.mandatees = nota.mandatees.sort((a, b) => a.priority - b.priority);
-    nota.group = nota.mandatees.map(mandatee => mandatee.priority).join('-');
-  }
-  const groupedNotas = groupBy(notasWithMandatees, 'group');
-  const groups = Object.keys(groupedNotas).map(key => key.split('-'));
-  // sort the groups by mandatee priority
-  const sortedKeys = sortMandateeGroups(null, groups).map(group => group.join('-'));
-  console.log(`Sorted mandatee groups: ${JSON.stringify(sortedKeys)}`);
+
+  const mandateePrioritiesAvailable = notasWithMandatees.every((nota) => nota.mandatees.every((m) => Number.isInteger(m.priority)));
+
   let numberedNotasWithMandatees = [];
-  for (let key of sortedKeys) {
-    // sort notas in 1 mandatee group by agendaitem number
-    const notasInMandateeGroup = groupedNotas[key];
-    const numberedNotasInMandateeGroup = sortByAgendaitemAndNumber(notasInMandateeGroup, numberedNotasWithMandatees.length);
-    numberedNotasWithMandatees = [...numberedNotasWithMandatees, ...notasInMandateeGroup];
+  if (mandateePrioritiesAvailable) {
+    console.log('Sorting newitems by mandatee priorities');
+    // calculate mandatee group per newsitem
+    for (let nota of notasWithMandatees) {
+      nota.mandatees = nota.mandatees.sort((a, b) => a.priority - b.priority);
+      nota.group = nota.mandatees.map(mandatee => mandatee.priority).join('-');
+    }
+    const groupedNotas = groupBy(notasWithMandatees, 'group');
+    const groups = Object.keys(groupedNotas).map(key => key.split('-'));
+    // sort the groups by mandatee priority
+    const sortedKeys = sortMandateeGroupsByPriority(null, groups).map(group => group.join('-'));
+    console.log(`Sorted mandatee groups: ${JSON.stringify(sortedKeys)}`);
+    for (let key of sortedKeys) {
+      // sort notas in 1 mandatee group by agendaitem number
+      const notasInMandateeGroup = groupedNotas[key];
+      const numberedNotasInMandateeGroup = sortByAgendaitemAndNumber(notasInMandateeGroup, numberedNotasWithMandatees.length);
+      numberedNotasWithMandatees = [...numberedNotasWithMandatees, ...notasInMandateeGroup];
+    }
+  } else {
+    console.log('Sorting newsitems by lowest agendaitem number assigned to group (best effort)');
+    // calculate mandatee group per newsitem
+    for (let nota of notasWithMandatees) {
+      nota.mandatees = nota.mandatees.sort((a, b) => a.uri - b.uri);
+      nota.group = nota.mandatees.map(mandatee => mandatee.uri).join('-');
+    }
+    const groupedNotas = groupBy(notasWithMandatees, 'group');
+    // sort the groups by lowest agendaitem number in group
+    const sortedKeys = sortMandateeGroupsByLowestAgendaitem(groupedNotas);
+    for (let key of sortedKeys) {
+      // sort notas in 1 mandatee group by agendaitem number
+      const notasInMandateeGroup = groupedNotas[key];
+      const numberedNotasInMandateeGroup = sortByAgendaitemAndNumber(notasInMandateeGroup, numberedNotasWithMandatees.length);
+      numberedNotasWithMandatees = [...numberedNotasWithMandatees, ...notasInMandateeGroup];
+    }
   }
 
   // Sort notas without mandatees by agendaitem number
@@ -184,14 +207,14 @@ function setPriorityOnNewsitems(newsitems) {
   return [...numberedNotas, ...numberedAnnouncements];
 }
 
-function sortMandateeGroups(head, tails) {
+function sortMandateeGroupsByPriority(head, tails) {
   let sortedGroups = tails.filter(t => t.length == 0).map(t => []);
 
   const nextHeads = uniq(tails.map(tail => tail[0]).filter(t => t));
   nextHeads.sort((a, b) => a - b);
   for (let nextHead of nextHeads) {
     const nextTails = tails.filter(t => t[0] == nextHead).map(t => t.slice(1));
-    const sortedTails = sortMandateeGroups(nextHead, nextTails);
+    const sortedTails = sortMandateeGroupsByPriority(nextHead, nextTails);
     for (let tail of sortedTails) {
       const group = [nextHead, ...tail];
       sortedGroups = [...sortedGroups, group];
@@ -199,6 +222,16 @@ function sortMandateeGroups(head, tails) {
   }
 
   return sortedGroups;
+}
+
+function sortMandateeGroupsByLowestAgendaitem(groupedNewsitems) {
+  const groupsWithNumber = Object.keys(groupedNewsitems).map(function(key) {
+    return {
+      key,
+      number: Math.min(...groupedNewsitems[key].map(nota => nota.agendaitem.number)),
+    };
+  });
+  return groupsWithNumber.sort((a, b) => a.number - b.number).map(group => group.key);
 }
 
 function sortByAgendaitemAndNumber(newsitems, baseNumber = 0) {
