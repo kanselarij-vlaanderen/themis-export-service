@@ -3,6 +3,7 @@ import SC2 from 'sparql-client-2';
 const { SparqlClient } = SC2;
 
 const virtuosoSparqlEndpoint = process.env.VIRTUOSO_SPARQL_ENDPOINT || "http://virtuoso:8890/sparql";
+const LOG_VIRTUOSO_QUERIES = [true, 'true', 1, '1', 'yes', 'Y', 'on'].includes(process.env.LOG_VIRTUOSO_QUERIES);
 
 function virtuosoSparqlClient() {
   let options = {
@@ -17,13 +18,12 @@ function virtuosoSparqlClient() {
     options.requestDefaults.headers['mu-call-id'] = httpContext.get('request').get('mu-call-id');
   }
 
-  console.log(`Headers set on SPARQL client: ${JSON.stringify(options)}`);
-
   return new SparqlClient(virtuosoSparqlEndpoint, options);
 }
 
 function queryVirtuoso(queryString) {
-  console.log(queryString);
+  if (LOG_VIRTUOSO_QUERIES)
+    console.log(queryString);
   return virtuosoSparqlClient().query(queryString).executeRaw().then(response => {
     function maybeParseJSON(body) {
       // Catch invalid JSON

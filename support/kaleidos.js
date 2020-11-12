@@ -3,6 +3,7 @@ import SC2 from 'sparql-client-2';
 const { SparqlClient } = SC2;
 
 const kaleidosSparqlEndpoint = process.env.KALEIDOS_SPARQL_ENDPOINT || "http://kaleidos:8890/sparql";
+const LOG_KALEIDOS_QUERIES = [true, 'true', 1, '1', 'yes', 'Y', 'on'].includes(process.env.LOG_KALEIDOS_QUERIES);
 
 function kaleidosSparqlClient() {
   let options = {
@@ -17,13 +18,12 @@ function kaleidosSparqlClient() {
     options.requestDefaults.headers['mu-call-id'] = httpContext.get('request').get('mu-call-id');
   }
 
-  console.log(`Headers set on SPARQL client: ${JSON.stringify(options)}`);
-
   return new SparqlClient(kaleidosSparqlEndpoint, options);
 }
 
 function queryKaleidos(queryString) {
-  console.log(queryString);
+  if (LOG_KALEIDOS_QUERIES)
+    console.log(queryString);
   return kaleidosSparqlClient().query(queryString).executeRaw().then(response => {
     function maybeParseJSON(body) {
       // Catch invalid JSON
