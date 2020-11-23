@@ -247,18 +247,25 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
 async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, publication, previousPublication, graph) {
   const publicAgendaitems = [];
 
-  for (let agendaitem of kaleidosAgendaitems) {
+  kaleidosAgendaitems.forEach((agendaitem) => {
     const id = uuid();
-    const publicAgendaitem = config.export.resourceUri.public('agendapunt', id);
+    agendaitem.publicId = id;
+    agendaitem.publicUri = config.export.resourceUri.public('agendapunt', id);
+  });
+
+  for (let agendaitem of kaleidosAgendaitems) {
     const now = new Date();
 
     const optionalStatements = [];
     if (agendaitem.title)
-      optionalStatements.push(`<${publicAgendaitem}> dct:title ${sparqlEscapeString(agendaitem.title)} .`);
+      optionalStatements.push(`<${agendaitem.publicUri}> dct:title ${sparqlEscapeString(agendaitem.title)} .`);
     if (agendaitem.alternative)
-      optionalStatements.push(`<${publicAgendaitem}> besluitvorming:korteTitel ${sparqlEscapeString(agendaitem.alternative)} .`);
-    if (agendaitem.previousAgendaitem)
-      optionalStatements.push(`<${publicAgendaitem}> besluit:aangebrachtNa ${sparqlEscapeUri(agendaitem.previousAgendaitem)} .`);
+      optionalStatements.push(`<${agendaitem.publicUri}> besluitvorming:korteTitel ${sparqlEscapeString(agendaitem.alternative)} .`);
+    if (agendaitem.previousAgendaitem) {
+      const previousAgendaitem = kaleidosAgendaitems.find(item => agendaitem.previousAgendaitem == item.uri);
+      if (previousAgendaitem)
+        optionalStatements.push(`<${agendaitem.publicUri}> besluit:aangebrachtNa ${sparqlEscapeUri(previousAgendaitem.publicUri)} .`);
+    }
 
     await update(`
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -270,16 +277,16 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
 
       INSERT DATA {
         GRAPH <${graph}> {
-          <${publicAgendaitem}> a besluit:Agendapunt ;
-            mu:uuid ${sparqlEscapeString(id)} ;
+          <${agendaitem.publicUri}> a besluit:Agendapunt ;
+            mu:uuid ${sparqlEscapeString(agendaitem.publicId)} ;
             dct:created ${sparqlEscapeDateTime(now)} ;
             dct:modified ${sparqlEscapeDateTime(now)} ;
             schema:position ${sparqlEscapeInt(agendaitem.number)} ;
             besluit:Agendapunt.type ${sparqlEscapeUri(agendaitem.type)} ;
             prov:wasDerivedFrom ${sparqlEscapeUri(agendaitem.uri)} .
           ${optionalStatements.join('\n')}
-          <${publication}> prov:generated <${publicAgendaitem}> .
-          <${publicAgenda.uri}> dct:hasPart <${publicAgendaitem}> .
+          <${publication}> prov:generated <${agendaitem.publicUri}> .
+          <${publicAgenda.uri}> dct:hasPart <${agendaitem.publicUri}> .
         }
       }`);
 
@@ -291,7 +298,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
 
         INSERT {
           GRAPH <${graph}> {
-            <${publicAgendaitem}> prov:wasRevisionOf ?previousPublicAgendaitem .
+            <${agendaitem.publicUri}> prov:wasRevisionOf ?previousPublicAgendaitem .
           }
         } WHERE {
           GRAPH <${config.export.graphs.public}> {
@@ -303,8 +310,8 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
     }
 
     publicAgendaitems.push({
-      id: id,
-      uri: publicAgendaitem,
+      id: agendaitem.publicId,
+      uri: agendaitem.publicUri,
       kaleidosUri: agendaitem.uri,
       newsletterInfo: agendaitem.newsletterInfo,
       number: agendaitem.number,
