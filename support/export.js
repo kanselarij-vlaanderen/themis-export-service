@@ -155,14 +155,14 @@ function setPriorityOnNewsitems(newsitems) {
   // Sort notas with mandatees
   const notasWithMandatees = notas.filter(item => item.mandatees.length > 0);
 
-  const mandateePrioritiesAvailable = notasWithMandatees.every((nota) => nota.mandatees.every((m) => Number.isInteger(m.priority)));
+  const mandateePrioritiesAvailable = notasWithMandatees.every((nota) => nota.mandatees.every((m) => m.priority));
 
   let numberedNotasWithMandatees = [];
   if (mandateePrioritiesAvailable) {
     console.log('Sorting newitems by mandatee priorities');
     // calculate mandatee group per newsitem
     for (let nota of notasWithMandatees) {
-      nota.mandatees = nota.mandatees.sort((a, b) => a.priority - b.priority);
+      nota.mandatees = nota.mandatees.sort((a, b) => parseInt(a.priority) - parseInt(b.priority));
       nota.group = nota.mandatees.map(mandatee => mandatee.priority).join('-');
     }
     const groupedNotas = groupBy(notasWithMandatees, 'group');
