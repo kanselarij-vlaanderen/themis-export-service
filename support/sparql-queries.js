@@ -469,6 +469,25 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
       }
     }`, graph);
 
+    // Copy dossier
+    await copyToLocalGraph(`
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+
+    CONSTRUCT {
+      ?dossier a dossier:Dossier ;
+        mu:uuid ?uuid ;
+        dossier:Dossier.bestaatUit ${sparqlEscapeUri(piece.uri)} .
+    }
+    WHERE {
+      GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
+        ?dossier a dossier:Dossier ;
+          mu:uuid ?uuid ;
+          dossier:Dossier.bestaatUit ${sparqlEscapeUri(piece.uri)} .
+      }
+    }`, graph);
+
     // Copy document container
     await copyToLocalGraph(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
