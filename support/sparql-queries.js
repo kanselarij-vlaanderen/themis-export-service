@@ -332,15 +332,16 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
     PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX dbpedia: <http://dbpedia.org/ontology/>
 
-    SELECT ?id ?title ?richtext ?text ?alternate
+    SELECT ?id ?title ?richtext ?text ?alternative
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosNewsitem}> dct:title ?title ;
                               mu:uuid ?id .
         OPTIONAL { <${kaleidosNewsitem}> ext:htmlInhoud ?richtext . }
         OPTIONAL { <${kaleidosNewsitem}> besluitvorming:inhoud ?text . }
-        OPTIONAL { <${kaleidosNewsitem}> dbpedia:subtitle ?alternate . }
+        OPTIONAL { <${kaleidosNewsitem}> dbpedia:subtitle ?alternative . }
       }
     }`));
 
@@ -396,8 +397,8 @@ async function insertNewsitem(newsitem, graph) {
     optionalStatements.push(`<${newsitem.uri}> prov:value ${sparqlEscapeString(newsitem.text)} .`);
   if (newsitem.title)
     optionalStatements.push(`<${newsitem.uri}> dct:title ${sparqlEscapeString(newsitem.title)} .`);
-  if (newsitem.alternate)
-    optionalStatements.push(`<${newsitem.uri}> dct:alternate ${sparqlEscapeString(newsitem.alternate)} .`);
+  if (newsitem.alternative)
+    optionalStatements.push(`<${newsitem.uri}> dct:alternative ${sparqlEscapeString(newsitem.alternative)} .`);
   if (newsitem.themes.length)
     optionalStatements.push(...newsitem.themes.map(theme => `<${newsitem.uri}> dct:subject ${sparqlEscapeUri(theme.uri)} .`));
   if (newsitem.mandatees.length)
