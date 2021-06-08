@@ -23,7 +23,7 @@ app.post('/meetings/:uuid/publication-activities', async function(req, res) {
   console.log(`Received request: ${JSON.stringify(req.body)}`);
   const scope = req.body.data && req.body.data.attributes && req.body.data.attributes.scope;
   if (scope && scope.includes('documents') && !scope.includes('newsitems')) {
-    res.status(400).send({
+    return res.status(400).send({
       error: 'If "documents" is included in the scope "newsitems" also need to be included.'
     });
   }
@@ -33,9 +33,9 @@ app.post('/meetings/:uuid/publication-activities', async function(req, res) {
     const jobId = uuid();
     const job = await createJob(meeting.uri, scope);
     executeJobs(); // async execution of export job
-    res.status(202).location(`/public-export-jobs/${job.id}`).send();
+    return res.status(202).location(`/public-export-jobs/${job.id}`).send();
   } else {
-    res.status(404).send(
+    return res.status(404).send(
       { error: `Could not find meeting with uuid ${meetingId} in Kaleidos`}
     );
   }
@@ -43,7 +43,7 @@ app.post('/meetings/:uuid/publication-activities', async function(req, res) {
 
 app.get('/public-export-jobs/summary', async function(req, res) {
   const summary = await getSummary();
-  res.status(200).send({
+  return res.status(200).send({
     data: summary
   });
 });
@@ -51,7 +51,7 @@ app.get('/public-export-jobs/summary', async function(req, res) {
 app.get('/public-export-jobs/:uuid', async function(req, res) {
   const job = await getJob(req.params.uuid);
   if (job) {
-    res.status(200).send({
+    return res.status(200).send({
       data: {
         type: 'public-export-job',
         id: job.id,
@@ -64,7 +64,7 @@ app.get('/public-export-jobs/:uuid', async function(req, res) {
       }
     });
   } else {
-    res.status(404).send(
+    return res.status(404).send(
       { error: `Could not find public-export-job with uuid ${req.params.uuid}`}
     );
   }
