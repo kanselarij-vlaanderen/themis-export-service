@@ -432,6 +432,7 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
     PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX mulit: <http://mu.semte.ch/vocabularies/typed-literals/>
 
     SELECT ?piece AS ?uri
     WHERE {
@@ -441,6 +442,8 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
         ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> .
         <${kaleidosAgendaitem}> besluitvorming:geagendeerdStuk ?piece .
         ?piece ext:toegangsniveauVoorDocumentVersie <${config.kaleidos.accessLevels.public}> .
+        OPTIONAL { ?piece ext:vertrouwelijk ?confidential . }
+        FILTER(?confidential != "true"^^mulit:boolean )
       }
     }
   `));
