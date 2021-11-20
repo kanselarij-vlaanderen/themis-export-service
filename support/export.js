@@ -1,4 +1,4 @@
-import { sparqlEscapeUri, uuid } from 'mu';
+import { sparqlEscapeUri, sparqlEscapeDateTime, uuid } from 'mu';
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import groupBy from 'lodash.groupby';
 import uniq from 'lodash.uniq';
@@ -253,6 +253,7 @@ async function createTtlToDeltaTask(files) {
       return `
         ${taskUri} prov:used ${fileUri}.
         ${sparqlEscapeUri(physicalFileUri)} nie:dataSource ${fileUri}.
+        ${sparqlEscapeUri(physicalFileUri)} dct:created ${sparqlEscapeDateTime(new Date())} .
     `;
     });
 
@@ -261,6 +262,7 @@ async function createTtlToDeltaTask(files) {
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+      PREFIX dct: <http://purl.org/dc/terms/>
       INSERT DATA {
         GRAPH <http://mu.semte.ch/graphs/public> {
           ${taskUri} a <http://mu.semte.ch/vocabularies/ext/TtlToDeltaTask>;
