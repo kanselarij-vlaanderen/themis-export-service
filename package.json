@@ -9,7 +9,7 @@
   "author": "redpencil.io",
   "license": "MIT",
   "dependencies": {
-    "@lblod/mu-auth-sudo": "^0.2.0",
+    "@lblod/mu-auth-sudo": "^0.3.2",
     "event-stream": "^4.0.1",
     "fs-extra": "^8.1.0",
     "lodash.uniq": "^4.5.0",
