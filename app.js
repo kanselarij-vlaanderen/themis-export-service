@@ -1,7 +1,6 @@
-import { app, uuid, errorHandler } from 'mu';
+import { app, errorHandler } from 'mu';
 import { createJob, getNextScheduledJob, getJob, executeJob, getSummary } from './support/jobs';
 import sq from './support/sparql-queries';
-import bodyParser from 'body-parser';
 
 /**
  * Endpoint to trigger the publication of a meeting from Kaleidos
@@ -30,7 +29,6 @@ app.post('/meetings/:uuid/publication-activities', async function(req, res) {
 
   const meeting = await sq.getMeeting({ id: meetingId });
   if (meeting) {
-    const jobId = uuid();
     const job = await createJob(meeting.uri, scope);
     executeJobs(); // async execution of export job
     return res.status(202).location(`/public-export-jobs/${job.id}`).send();

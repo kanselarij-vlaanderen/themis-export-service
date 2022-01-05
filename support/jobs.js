@@ -1,6 +1,5 @@
 import { sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, uuid } from 'mu';
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
-import { parseResult } from './query-helpers';
 import { generateExport } from './export';
 import config from '../config';
 
@@ -193,4 +192,4 @@ export {
   getJob,
   executeJob,
   getSummary
-}
+};

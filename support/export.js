@@ -1,5 +1,5 @@
 import { sparqlEscapeUri, sparqlEscapeDateTime, uuid } from 'mu';
-import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
+import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import groupBy from 'lodash.groupby';
 import uniq from 'lodash.uniq';
 import config from '../config';
@@ -26,11 +26,11 @@ async function generateExport(job) {
   }
   const publication = await sq.insertPublicationActivity(job.meeting, job.graph);
 
-  if (job.scope.includes("newsitems")) {
+  if (job.scope.includes('newsitems')) {
     const publicResources = await generatePublicAgendaAndAgendaitems(job.meeting, publication, includeAnnouncements, job.graph);
     publicResources.newsitems = await copyNewsitems(publicResources.agendaitems, job.graph);
 
-    if (job.scope.includes("documents")) {
+    if (job.scope.includes('documents')) {
       if (meetingDate < config.export.historicDates.documents) {
         console.log(`Public export didn't include documents yet on ${meetingDate}. Documents will not be exported.`);
       } else {
@@ -174,7 +174,7 @@ function setPriorityOnNewsitems(newsitems) {
       // sort notas in 1 mandatee group by agendaitem number
       const notasInMandateeGroup = groupedNotas[key];
       const numberedNotasInMandateeGroup = sortByAgendaitemAndNumber(notasInMandateeGroup, numberedNotasWithMandatees.length);
-      numberedNotasWithMandatees = [...numberedNotasWithMandatees, ...notasInMandateeGroup];
+      numberedNotasWithMandatees = [...numberedNotasWithMandatees, ...numberedNotasInMandateeGroup];
     }
   } else {
     console.log('Sorting newsitems by lowest agendaitem number assigned to group (best effort)');
@@ -190,7 +190,7 @@ function setPriorityOnNewsitems(newsitems) {
       // sort notas in 1 mandatee group by agendaitem number
       const notasInMandateeGroup = groupedNotas[key];
       const numberedNotasInMandateeGroup = sortByAgendaitemAndNumber(notasInMandateeGroup, numberedNotasWithMandatees.length);
-      numberedNotasWithMandatees = [...numberedNotasWithMandatees, ...notasInMandateeGroup];
+      numberedNotasWithMandatees = [...numberedNotasWithMandatees, ...numberedNotasInMandateeGroup];
     }
   }
 
@@ -208,7 +208,7 @@ function setPriorityOnNewsitems(newsitems) {
 }
 
 function sortMandateeGroupsByPriority(head, tails) {
-  let sortedGroups = tails.filter(t => t.length == 0).map(t => []);
+  let sortedGroups = tails.filter(t => t.length == 0).map(() => []);
 
   const nextHeads = uniq(tails.map(tail => tail[0]).filter(t => t));
   nextHeads.sort((a, b) => a - b);
@@ -322,4 +322,4 @@ async function fixNamespaces(graph) {
 
 export {
   generateExport
-}
+};
