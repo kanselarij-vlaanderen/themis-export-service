@@ -1,6 +1,17 @@
 import { app, errorHandler } from 'mu';
+import fetch from 'node-fetch';
+import { CronJob } from 'cron';
 import { createJob, getNextScheduledJob, getJob, executeJob, getSummary } from './support/jobs';
+import { fetchScheduledPublicationActivities } from './support/polling';
 import sq from './support/sparql-queries';
+
+/** Schedule publications from Kaleidos cron job */
+const cronFrequency = process.env.PUBLICATION_CRON_PATTERN || '0 * * * * *';
+
+new CronJob(cronFrequency, function() {
+  console.log(`Kaleidos publication polling triggered by cron job at ${new Date().toISOString()}`);
+  triggerKaleidosPublications();
+}, null, true);
 
 /**
  * Endpoint to trigger the publication of a meeting from Kaleidos
@@ -12,7 +23,8 @@ import sq from './support/sparql-queries';
  *   "data": {
  *     "type": "publication-activity",
  *     "attributes": {
- *       "scope": ['newsitems', 'documents']
+ *       "scope": ["newsitems", "documents"],
+ *       "source": "http://themis.vlaanderen.be/publicatie-activiteit/326ca29e-896d-4231-9a72-0be237e104fb"
  *     }
  *   }
  * }
@@ -27,9 +39,16 @@ app.post('/meetings/:uuid/publication-activities', async function(req, res) {
     });
   }
 
+  const source = req.body.data && req.body.data.attributes && req.body.data.attributes.source;
+  try {
+    new URL(source);
+  } catch (e) {
+    return res.status(400).send({ error: 'Invalid source URI' });
+  }
+
   const meeting = await sq.getMeeting({ id: meetingId });
   if (meeting) {
-    const job = await createJob(meeting.uri, scope);
+    const job = await createJob(meeting.uri, scope, source);
     executeJobs(); // async execution of export job
     return res.status(202).location(`/public-export-jobs/${job.id}`).send();
   } else {
@@ -79,4 +98,34 @@ async function executeJobs() {
     executeJobs(); // trigger execution of next job if there is one scheduled
   }
   // else: no job scheduled. Nothing should happen
+}
+
+async function triggerKaleidosPublications() {
+  const publicationActivities = await fetchScheduledPublicationActivities();
+  if (publicationActivities.length) {
+    console.log(`Found ${publicationActivities.length} new publication activities in Kaleidos`);
+    for (let publicationActivity of publicationActivities) {
+      console.log(`Trigger publication for meeting <${publicationActivity.meeting.uri}>, planned at ${publicationActivity.plannedStart}`);
+      const response = await fetch(`http://localhost/meetings/${publicationActivity.meeting.id}/publication-activities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/vnd.api+json' },
+        body: JSON.stringify({
+          data: {
+            type: 'publication-activity',
+            attributes: {
+              scope: publicationActivity.scope,
+              source: publicationActivity.uri
+            }
+          }
+        })
+      });
+      if (!response.ok) {
+        console.log(`Something went wrong while triggering publication for meeting <${publicationActivity.meeting.uri}>`);
+        const error = await response.json();
+        console.log(error);
+      }
+    }
+  } else {
+    console.log(`Nothing to publish right now.`);
+  }
 }

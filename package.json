@@ -10,10 +10,12 @@
   "license": "MIT",
   "dependencies": {
     "@lblod/mu-auth-sudo": "^0.3.2",
+    "cron": "^1.8.2",
     "event-stream": "^4.0.1",
     "fs-extra": "^8.1.0",
     "lodash.uniq": "^4.5.0",
     "lodash.groupby": "^4.6.0",
+    "node-fetch": "^2.6.6",
     "request": "^2.88.0"
   }
 }

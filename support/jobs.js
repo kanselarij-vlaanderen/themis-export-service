@@ -3,13 +3,15 @@ import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import { generateExport } from './export';
 import config from '../config';
 
-async function createJob(meeting, scopes) {
+async function createJob(meeting, scopes, source = null) {
   const jobUuid = uuid();
   const jobUri = `http://data.kaleidos.vlaanderen.be/public-export-jobs/${jobUuid}`;
 
   const scopeStatements = (scopes || []).map((scope) => (
-    `${sparqlEscapeUri(jobUri)} ext:scope ${sparqlEscapeString(scope)}.`
+    `${sparqlEscapeUri(jobUri)} ext:scope ${sparqlEscapeString(scope)} .`
   ));
+
+  const sourceStatement = source ? `${sparqlEscapeUri(jobUri)} dct:source ${sparqlEscapeUri(source)} .` : '';
 
   const now = new Date();
 
@@ -22,13 +24,14 @@ async function createJob(meeting, scopes) {
 
   INSERT DATA {
     GRAPH <${config.export.graphs.job}> {
-        ${sparqlEscapeUri(jobUri)} a ext:PublicExportJob;
+        ${sparqlEscapeUri(jobUri)} a ext:PublicExportJob ;
                            mu:uuid ${sparqlEscapeString(jobUuid)} ;
                            prov:used ${sparqlEscapeUri(meeting)} ;
                            adms:status ${sparqlEscapeUri(config.export.job.statuses.scheduled)} ;
                            dct:created ${sparqlEscapeDateTime(now)} ;
                            dct:modified ${sparqlEscapeDateTime(now)} .
         ${scopeStatements.join('\n')}
+        ${sourceStatement}
     }
   }`);
 
