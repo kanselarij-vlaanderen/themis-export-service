@@ -40,10 +40,12 @@ app.post('/meetings/:uuid/publication-activities', async function(req, res) {
   }
 
   const source = req.body.data && req.body.data.attributes && req.body.data.attributes.source;
-  try {
-    new URL(source);
-  } catch (e) {
-    return res.status(400).send({ error: 'Invalid source URI' });
+  if (source) {
+    try {
+      new URL(source);
+    } catch (e) {
+      return res.status(400).send({ error: 'Invalid source URI' });
+    }
   }
 
   const meeting = await sq.getMeeting({ id: meetingId });
