@@ -42,7 +42,7 @@ steps:
 - name: push-feature-build
   image: plugins/docker
   settings:
-    repo: ${DRONE_REPO_NAMESPACE/kanselarij-vlaanderen/kanselarij}/${DRONE_REPO_NAME/kaleidos-frontend/frontend-kaleidos}
+    repo: ${DRONE_REPO_NAMESPACE/kanselarij-vlaanderen/kanselarij}/${DRONE_REPO_NAME}
     tags: ${DRONE_BRANCH/\//-}
     username:
       from_secret: docker_username
@@ -73,9 +73,3 @@ steps:
 trigger:
   event:
     - tag
-
----
-kind: signature
-hmac: ebc0fcc972026c9ae7d68c3497c806998a4f354263a97b37c84ba43fd84cd6ee
-
-...
