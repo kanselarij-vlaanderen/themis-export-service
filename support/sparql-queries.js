@@ -235,7 +235,7 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
                              prov:generated ?newsletterInfo .
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
-        OPTIONAL { ?agendaitem dct:alternative ?alternative . }
+        OPTIONAL { ?agendaitem besluitvorming:korteTitel ?alternative . }
         OPTIONAL { ?agendaitem ext:wordtGetoondAlsMededeling ?isAnnouncement . }
         OPTIONAL { ?agendaitem besluit:aangebrachtNa ?previousAgendaitem . }
         OPTIONAL { ?newsletterInfo ext:afgewerkt ?afgewerkt . }
