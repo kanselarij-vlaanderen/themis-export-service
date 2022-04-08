@@ -225,12 +225,13 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
     PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX schema: <http://schema.org/>
 
     SELECT ?agendaitem AS ?uri ?number ?title ?alternative ?isAnnouncement ?previousAgendaitem ?newsletterInfo
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
-        ?agendaitem ext:prioriteit ?number .
+        ?agendaitem schema:position ?number .
         ?agendaitemTreatment besluitvorming:heeftOnderwerp ?agendaitem ;
                              prov:generated ?newsletterInfo .
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
