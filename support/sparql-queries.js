@@ -225,17 +225,18 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
     PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX schema: <http://schema.org/>
 
-    SELECT ?agendaitem AS ?uri ?number ?title ?alternative ?isAnnouncement ?previousAgendaitem ?newsletterInfo
+    SELECT ?agendaitem AS ?uri ?number ?title ?shortTitle ?isAnnouncement ?previousAgendaitem ?newsletterInfo
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
-        ?agendaitem ext:prioriteit ?number .
+        ?agendaitem schema:position ?number .
         ?agendaitemTreatment besluitvorming:heeftOnderwerp ?agendaitem ;
                              prov:generated ?newsletterInfo .
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
-        OPTIONAL { ?agendaitem dct:alternative ?alternative . }
+        OPTIONAL { ?agendaitem besluitvorming:korteTitel ?shortTitle . }
         OPTIONAL { ?agendaitem ext:wordtGetoondAlsMededeling ?isAnnouncement . }
         OPTIONAL { ?agendaitem besluit:aangebrachtNa ?previousAgendaitem . }
         OPTIONAL { ?newsletterInfo ext:afgewerkt ?afgewerkt . }
@@ -259,8 +260,8 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
     const optionalStatements = [];
     if (agendaitem.title)
       optionalStatements.push(`<${agendaitem.publicUri}> dct:title ${sparqlEscapeString(agendaitem.title)} .`);
-    if (agendaitem.alternative)
-      optionalStatements.push(`<${agendaitem.publicUri}> besluitvorming:korteTitel ${sparqlEscapeString(agendaitem.alternative)} .`);
+    if (agendaitem.shortTitle)
+      optionalStatements.push(`<${agendaitem.publicUri}> besluitvorming:korteTitel ${sparqlEscapeString(agendaitem.shortTitle)} .`);
     if (agendaitem.previousAgendaitem) {
       const previousAgendaitem = kaleidosAgendaitems.find(item => agendaitem.previousAgendaitem == item.uri);
       if (previousAgendaitem)
@@ -316,7 +317,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
       newsletterInfo: agendaitem.newsletterInfo,
       number: agendaitem.number,
       type: agendaitem.type,
-      shortTitle: agendaitem.alternative,
+      shortTitle: agendaitem.shortTitle,
       title: agendaitem.title
     });
   }
