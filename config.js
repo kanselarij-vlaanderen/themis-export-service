@@ -49,5 +49,7 @@ export default {
       documents: new Date(Date.parse('2016-09-08T00:00:00.000Z'))
     },
     directory: process.env.EXPORT_DIR || '/share/'
-  }
+  },
+  numberOfQueryRetries: parseInt(process.env.NB_OF_VIRTUOSO_QUERY_RETRIES || 6),
+  retryTimeoutMilliseconds: parseInt(process.env.VIRTUOSO_QUERY_RETRY_MILLIS || 1000),
 };

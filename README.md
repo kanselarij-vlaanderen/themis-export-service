@@ -46,6 +46,8 @@ The following environment variables can be configured:
 * `EXPORT_BATCH_SIZE` (default: 1000): number of triples to export in batch in the final dump
 * `PUBLICATION_CRON_PATTERN` (default `0 * * * * *` = every minute): frequency to fetch for scheduled publications in Kaleidos
 * `PUBLICATION_WINDOW_MILLIS` (default: 24h): max window to fetch publication-activities in Kaleidos for. The window determines the period in which scheduled publications will still be executed (in delay) if this export service is not running at the moment the publication was originally planned.
+* `NB_OF_VIRTUOSO_QUERY_RETRIES` (default 6): max number of times to retry a query to Virtuoso. Sometimes Virtuoso is busy creating a checkpoint. If we make a request at this time, it will fail, to remedy this, we retry failed requests a number of times
+* `VIRTUOSO_QUERY_RETRY_MILLIS` (default 1000): the timeout in milliseconds between query retries
 
 ### Model
 #### Used prefixes
