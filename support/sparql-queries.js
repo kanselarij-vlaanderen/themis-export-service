@@ -443,8 +443,6 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
         ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> .
         <${kaleidosAgendaitem}> besluitvorming:geagendeerdStuk ?piece .
         ?piece ext:toegangsniveauVoorDocumentVersie <${config.kaleidos.accessLevels.public}> .
-        OPTIONAL { ?piece ext:vertrouwelijk ?confidential . }
-        FILTER(?confidential != "true"^^mulit:boolean )
       }
     }
   `));
