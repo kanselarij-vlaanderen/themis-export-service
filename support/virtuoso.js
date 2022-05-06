@@ -1,10 +1,11 @@
 import httpContext from 'express-http-context';
-import config from '../config';
 import SC2 from 'sparql-client-2';
 const { SparqlClient } = SC2;
 
 const virtuosoSparqlEndpoint = process.env.VIRTUOSO_SPARQL_ENDPOINT || "http://virtuoso:8890/sparql";
 const LOG_VIRTUOSO_QUERIES = [true, 'true', 1, '1', 'yes', 'Y', 'on'].includes(process.env.LOG_VIRTUOSO_QUERIES);
+const NB_OF_QUERY_RETRIES = parseInt(process.env.NB_OF_VIRTUOSO_QUERY_RETRIES || 6);
+const RETRY_TIMEOUT_MS = parseInt(process.env.VIRTUOSO_QUERY_RETRY_MILLIS || 1000);
 
 function virtuosoSparqlClient() {
   let options = {
@@ -23,7 +24,7 @@ function virtuosoSparqlClient() {
 }
 
 async function executeQuery(client, queryString, options = { }) {
-  const retries = options.retries || config.numberOfQueryRetries;
+  const retries = options.retries || NB_OF_QUERY_RETRIES;
 
   try {
     const response = await client.query(queryString).executeRaw();
@@ -40,9 +41,9 @@ async function executeQuery(client, queryString, options = { }) {
   } catch (ex) {
     const retriesLeft = retries - 1;
     if (retriesLeft > 0) {
-      const current = config.numberOfQueryRetries - retriesLeft;
-      const timeout = current * config.retryTimeoutMilliseconds;
-      console.log(`Failed to execute query (attempt ${current} out of ${config.numberOfQueryRetries}). Will retry.`);
+      const current = NB_OF_QUERY_RETRIES - retriesLeft;
+      const timeout = current * RETRY_TIMEOUT_MS;
+      console.log(`Failed to execute query (attempt ${current} out of ${NB_OF_QUERY_RETRIES}). Will retry.`);
       return new Promise(function(resolve, reject) {
         setTimeout(() => {
           try {

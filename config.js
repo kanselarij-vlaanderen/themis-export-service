@@ -50,6 +50,4 @@ export default {
     },
     directory: process.env.EXPORT_DIR || '/share/'
   },
-  numberOfQueryRetries: parseInt(process.env.NB_OF_VIRTUOSO_QUERY_RETRIES || 6),
-  retryTimeoutMilliseconds: parseInt(process.env.VIRTUOSO_QUERY_RETRY_MILLIS || 1000),
 };
