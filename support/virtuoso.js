@@ -4,6 +4,8 @@ const { SparqlClient } = SC2;
 
 const virtuosoSparqlEndpoint = process.env.VIRTUOSO_SPARQL_ENDPOINT || "http://virtuoso:8890/sparql";
 const LOG_VIRTUOSO_QUERIES = [true, 'true', 1, '1', 'yes', 'Y', 'on'].includes(process.env.LOG_VIRTUOSO_QUERIES);
+const NB_OF_QUERY_RETRIES = parseInt(process.env.NB_OF_VIRTUOSO_QUERY_RETRIES || 6);
+const RETRY_TIMEOUT_MS = parseInt(process.env.VIRTUOSO_QUERY_RETRY_MILLIS || 1000);
 
 function virtuosoSparqlClient() {
   let options = {
@@ -21,21 +23,49 @@ function virtuosoSparqlClient() {
   return new SparqlClient(virtuosoSparqlEndpoint, options);
 }
 
-function queryVirtuoso(queryString) {
-  if (LOG_VIRTUOSO_QUERIES)
-    console.log(queryString);
-  return virtuosoSparqlClient().query(queryString).executeRaw().then(response => {
+async function executeQuery(client, queryString, options = { }) {
+  const retries = options.retries || NB_OF_QUERY_RETRIES;
+
+  try {
+    const response = await client.query(queryString).executeRaw();
+
     function maybeParseJSON(body) {
-      // Catch invalid JSON
       try {
         return JSON.parse(body);
-      } catch (ex) {
+      } catch (ex) { // Catch invalid JSON
         return null;
       }
     }
 
     return maybeParseJSON(response.body);
-  });
+  } catch (ex) {
+    const retriesLeft = retries - 1;
+    if (retriesLeft > 0) {
+      const current = NB_OF_QUERY_RETRIES - retriesLeft;
+      const timeout = current * RETRY_TIMEOUT_MS;
+      console.log(`Failed to execute query (attempt ${current} out of ${NB_OF_QUERY_RETRIES}). Will retry.`);
+      return new Promise(function(resolve, reject) {
+        setTimeout(() => {
+          try {
+            const result = executeQuery(client, queryString, { retries: retriesLeft });
+            resolve(result);
+          } catch (ex) {
+            reject(ex);
+          }
+        }, timeout);
+      });
+    } else {
+      console.log(`Max number of retries reached. Query failed.\n ${queryString}`);
+      throw ex;
+    }
+  }
+}
+
+async function queryVirtuoso(queryString) {
+  if (LOG_VIRTUOSO_QUERIES)
+    console.log(queryString);
+  const client = virtuosoSparqlClient();
+  return await executeQuery(client, queryString);
 }
 
 const updateVirtuoso = queryVirtuoso;

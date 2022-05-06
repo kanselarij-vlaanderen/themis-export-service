@@ -49,5 +49,5 @@ export default {
       documents: new Date(Date.parse('2016-09-08T00:00:00.000Z'))
     },
     directory: process.env.EXPORT_DIR || '/share/'
-  }
+  },
 };
