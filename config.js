@@ -5,7 +5,7 @@ export default {
       public: 'http://mu.semte.ch/graphs/public'
     },
     accessLevels: {
-      public: 'http://kanselarij.vo.data.gift/id/concept/toegangs-niveaus/6ca49d86-d40f-46c9-bde3-a322aa7e5c8e'
+      public: 'http://themis.vlaanderen.be/id/concept/toegangsniveau/c3de9c70-391e-4031-a85e-4b03433d6266'
     },
     publication: {
       window: process.env.PUBLICATION_WINDOW_MILLIS || 24*60*60*1000 // fetch publication-activities of last 24h
