@@ -74,18 +74,20 @@ async function copyMeeting(uri, graph) {
   }
 
   await copyToLocalGraph(`
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX themis: <http://themis.vlaanderen.be/vocabularies/besluitvorming/>
 
     CONSTRUCT {
-        ${sparqlEscapeUri(uri)} themis:geplandePublicatieDatumDocumenten ?documentsPublicationDate .
+        ${sparqlEscapeUri(uri)} themis:geplandePublicatieDatumDocumenten ?internalDocumentsPublicationDate .
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
-        ${sparqlEscapeUri(uri)} ext:algemeneNieuwsbrief ?newsletter .
-        ?newsletter ext:issuedDocDate ?documentsPublicationDate .
+        ${sparqlEscapeUri(uri)} ^ext:internalDocumentPublicationActivityUsed ?internalDocumentPublicationActivity .
+        ?internalDocumentPublicationActivity a ext:InternalDocumentPublicationActivity .
+        ?internalDocumentPublicationActivity prov:startedAtDate ?internalDocumentsPublicationDate .
       }
     }
   `, graph);
