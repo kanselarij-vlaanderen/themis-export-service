@@ -40,7 +40,7 @@ async function hasBeenPublished(publicationActivity) {
 
 async function getRecentPublicationActivities() {
   const now = new Date();
-  const publicationWindowStart = new Date(now - config.kaleidos.publication.window);
+  const publicationWindowStart = new Date(now.getTime() - config.kaleidos.publication.window);
 
   const result = await queryKaleidos(`
     PREFIX prov: <http://www.w3.org/ns/prov#>
