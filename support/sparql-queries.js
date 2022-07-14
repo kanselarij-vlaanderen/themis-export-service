@@ -79,15 +79,16 @@ async function copyMeeting(uri, graph) {
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX themis: <http://themis.vlaanderen.be/vocabularies/besluitvorming/>
+    PREFIX generiek: <https://data.vlaanderen.be/ns/generiek#>
 
     CONSTRUCT {
-        ${sparqlEscapeUri(uri)} themis:geplandePublicatieDatumDocumenten ?internalDocumentsPublicationDate .
+        ${sparqlEscapeUri(uri)} themis:geplandePublicatieDatumDocumenten ?documentsPublicationDate .
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
-        ${sparqlEscapeUri(uri)} ^ext:internalDocumentPublicationActivityUsed ?internalDocumentPublicationActivity .
-        ?internalDocumentPublicationActivity a ext:InternalDocumentPublicationActivity .
-        ?internalDocumentPublicationActivity prov:startedAtDate ?internalDocumentsPublicationDate .
+        ${sparqlEscapeUri(uri)} ^prov:used ?themisPublicationActivity .
+        ?themisPublicationActivity a ext:ThemisPublicationActivity .
+        ?themisPublicationActivity generiek:geplandeStart ?documentsPublicationDate .
       }
     }
   `, graph);
