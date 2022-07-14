@@ -7,6 +7,9 @@ export default {
     accessLevels: {
       public: 'http://themis.vlaanderen.be/id/concept/toegangsniveau/c3de9c70-391e-4031-a85e-4b03433d6266'
     },
+    releaseStatuses: {
+      released: 'http://themis.vlaanderen.be/id/concept/vrijgave-status/27bd25d1-72b4-49b2-a0ba-236ca28373e5'
+    },
     publication: {
       window: process.env.PUBLICATION_WINDOW_MILLIS || 24*60*60*1000 // fetch publication-activities of last 24h
     },
