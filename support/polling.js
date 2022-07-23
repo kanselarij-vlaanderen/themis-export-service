@@ -38,21 +38,28 @@ async function hasBeenPublished(publicationActivity) {
   return jobs.length != 0;
 }
 
+/**
+ * Get all themis-publication-activities that have a planned start in a limited window.
+ * We only get those that have a startedAtTime and a status of "released" 
+ */
 async function getRecentPublicationActivities() {
   const now = new Date();
-  const publicationWindowStart = new Date(now - config.kaleidos.publication.window);
+  const publicationWindowStart = new Date(now.getTime() - config.kaleidos.publication.window);
 
   const result = await queryKaleidos(`
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
 
     SELECT ?uri ?meeting ?meetingId ?plannedStart
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ?uri a ext:ThemisPublicationActivity ;
           prov:used ?meeting ;
-          prov:startedAtTime ?plannedStart .
+          prov:startedAtTime ?plannedStart ;
+          adms:status ?status .
+        FILTER(?status = ${sparqlEscapeUri(config.kaleidos.releaseStatuses.released)})
         FILTER(?plannedStart >= ${sparqlEscapeDateTime(publicationWindowStart)})
         FILTER(?plannedStart <= ${sparqlEscapeDateTime(now)})
         ?meeting mu:uuid ?meetingId .
