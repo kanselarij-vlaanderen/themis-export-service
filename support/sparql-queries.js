@@ -72,7 +72,8 @@ async function copyMeeting(uri, graph) {
         }
       }`, graph);
   }
-
+  // note that we only need to take into account the latest themis-publication-activity here (hence the LIMIT 1).
+  // Otherwise all the existing activities insert a ?documentsPublicationDate into the local graph, which is not what we want.
   await copyToLocalGraph(`
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
@@ -90,7 +91,7 @@ async function copyMeeting(uri, graph) {
         ?themisPublicationActivity a ext:ThemisPublicationActivity .
         ?themisPublicationActivity generiek:geplandeStart ?documentsPublicationDate .
       }
-    }
+    } LIMIT 1
   `, graph);
 }
 
