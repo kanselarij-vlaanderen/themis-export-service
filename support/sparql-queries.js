@@ -72,8 +72,8 @@ async function copyMeeting(uri, graph) {
         }
       }`, graph);
   }
-  // note that we only need to take into account the latest themis-publication-activity here (hence the LIMIT 1).
-  // Otherwise all the existing activities insert a ?documentsPublicationDate into the local graph, which is not what we want.
+  // note that we only need to take into account the latest themis-publication-activity with scope "documents" here (hence the LIMIT 1).
+  // Otherwise all the existing activities insert a ?documentsPublicationDate into the local graph, including those for "newsitems", which is not what we want.
   await copyToLocalGraph(`
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
@@ -90,6 +90,7 @@ async function copyMeeting(uri, graph) {
         ${sparqlEscapeUri(uri)} ^prov:used ?themisPublicationActivity .
         ?themisPublicationActivity a ext:ThemisPublicationActivity .
         ?themisPublicationActivity generiek:geplandeStart ?documentsPublicationDate .
+        ?themisPublicationActivity ext:scope "documents" .
       }
     } LIMIT 1
   `, graph);
