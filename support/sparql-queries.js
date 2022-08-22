@@ -242,7 +242,16 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
         OPTIONAL { ?agendaitem besluitvorming:korteTitel ?shortTitle . }
-        OPTIONAL { ?agendaitem ext:wordtGetoondAlsMededeling ?isAnnouncement . }
+        OPTIONAL {
+          ?agendaitem dct:type ?type .
+          BIND(
+            IF (
+              ?type = <http://themis.vlaanderen.be/id/concept/agendapunt-type/8f8adcf0-58ef-4edc-9e36-0c9095fd76b0>,
+              "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean>,
+              "false"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean>
+            ) AS ?isAnnouncement
+          )
+        }
         OPTIONAL { ?agendaitem besluit:aangebrachtNa ?previousAgendaitem . }
         OPTIONAL { ?newsletterInfo ext:afgewerkt ?afgewerkt . }
         FILTER (STR(?isAnnouncement) = "true" || STR(?afgewerkt) = "true")
