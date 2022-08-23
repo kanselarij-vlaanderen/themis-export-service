@@ -232,7 +232,7 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX schema: <http://schema.org/>
 
-    SELECT ?agendaitem AS ?uri ?number ?title ?shortTitle ?isAnnouncement ?previousAgendaitem ?newsletterInfo
+    SELECT ?agendaitem AS ?uri ?number ?title ?shortTitle ?type ?previousAgendaitem ?newsletterInfo
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
@@ -242,19 +242,10 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
         OPTIONAL { ?agendaitem besluitvorming:korteTitel ?shortTitle . }
-        OPTIONAL {
-          ?agendaitem dct:type ?type .
-          BIND(
-            IF (
-              ?type = <http://themis.vlaanderen.be/id/concept/agendapunt-type/8f8adcf0-58ef-4edc-9e36-0c9095fd76b0>,
-              "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean>,
-              "false"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean>
-            ) AS ?isAnnouncement
-          )
-        }
+        OPTIONAL { ?agendaitem dct:type ?type . }
         OPTIONAL { ?agendaitem besluit:aangebrachtNa ?previousAgendaitem . }
         OPTIONAL { ?newsletterInfo ext:afgewerkt ?afgewerkt . }
-        FILTER (STR(?isAnnouncement) = "true" || STR(?afgewerkt) = "true")
+        FILTER (?type = ${sparqlEscapeUri(config.export.codelists.agendaitemType.announcement)} || STR(?afgewerkt) = "true")
       }
     }`));
 }
