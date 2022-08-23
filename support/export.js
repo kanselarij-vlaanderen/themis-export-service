@@ -89,9 +89,6 @@ function sortAgendaitems(agendaitems) {
   const sortedNotas = notas.sort(function(a, b) { return a.number - b.number; });
   const sortedAnnouncements = announcements.sort(function(a, b) { return a.number - b.number; });
 
-  sortedNotas.forEach(item => item.type = config.export.codelists.agendaitemType.nota);
-  sortedAnnouncements.forEach(item => item.type = config.export.codelists.agendaitemType.announcement);
-
   if (sortedNotas.length) {
     sortedNotas[0].previousAgendaitem = null;
     sortedNotas[0].number = 1;
