@@ -232,7 +232,7 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX schema: <http://schema.org/>
 
-    SELECT ?agendaitem AS ?uri ?number ?title ?shortTitle ?isAnnouncement ?previousAgendaitem ?newsletterInfo
+    SELECT ?agendaitem AS ?uri ?number ?title ?shortTitle ?type ?previousAgendaitem ?newsletterInfo
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
@@ -242,10 +242,10 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
         OPTIONAL { ?agendaitem besluitvorming:korteTitel ?shortTitle . }
-        OPTIONAL { ?agendaitem ext:wordtGetoondAlsMededeling ?isAnnouncement . }
+        OPTIONAL { ?agendaitem dct:type ?type . }
         OPTIONAL { ?agendaitem besluit:aangebrachtNa ?previousAgendaitem . }
         OPTIONAL { ?newsletterInfo ext:afgewerkt ?afgewerkt . }
-        FILTER (STR(?isAnnouncement) = "true" || STR(?afgewerkt) = "true")
+        FILTER (?type = ${sparqlEscapeUri(config.export.codelists.agendaitemType.announcement)} || STR(?afgewerkt) = "true")
       }
     }`));
 }

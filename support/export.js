@@ -63,7 +63,7 @@ async function generatePublicAgendaAndAgendaitems(meeting, publication, includeA
   const publicAgenda = await sq.insertPublicAgenda(agenda, meeting, publication.uri, previousPublicationUri, graph);
   let agendaitems = await sq.getAgendaitemsWithNewsletterInfo(agenda);
   if (!includeAnnouncements)
-    agendaitems = agendaitems.filter(item => item.isAnnouncement != "true");
+    agendaitems = agendaitems.filter(item => item.type !== config.export.codelists.agendaitemType.announcement);
   console.log(`Found ${agendaitems.length} agendaitems with a newsitem to publish`);
   const sortedAgendaitems = sortAgendaitems(agendaitems);
 
@@ -81,16 +81,13 @@ async function generatePublicAgendaAndAgendaitems(meeting, publication, includeA
 }
 
 function sortAgendaitems(agendaitems) {
-  const notas = agendaitems.filter(item => item.isAnnouncement == "false");
-  const announcements = agendaitems.filter(item => item.isAnnouncement == "true");
+  const notas = agendaitems.filter(item => item.type === config.export.codelists.agendaitemType.nota);
+  const announcements = agendaitems.filter(item => item.type === config.export.codelists.agendaitemType.announcement);
 
   console.log(`Publication includes ${notas.length} notas and ${announcements.length} announcements`);
 
   const sortedNotas = notas.sort(function(a, b) { return a.number - b.number; });
   const sortedAnnouncements = announcements.sort(function(a, b) { return a.number - b.number; });
-
-  sortedNotas.forEach(item => item.type = config.export.codelists.agendaitemType.nota);
-  sortedAnnouncements.forEach(item => item.type = config.export.codelists.agendaitemType.announcement);
 
   if (sortedNotas.length) {
     sortedNotas[0].previousAgendaitem = null;
