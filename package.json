@@ -1,6 +1,6 @@
 {
   "name": "themis-export-service",
-  "version": "3.0.0",
+  "version": "2.1.0",
   "description": "Microservice that exports data from Kaleidos to be published on Themis",
   "repository": {
     "type": "git",
