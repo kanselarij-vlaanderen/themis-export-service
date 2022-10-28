@@ -519,7 +519,6 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     await copyToLocalGraph(`
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
     CONSTRUCT {
       ?documentContainer dct:type ?documentType .
@@ -528,7 +527,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ?documentContainer a dossier:Serie ;
           dossier:collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
-          ext:documentType ?documentType .
+          dct:type ?documentType .
       }
     }`, graph);
 
