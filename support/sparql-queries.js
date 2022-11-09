@@ -572,11 +572,24 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
         nfo:fileSize ?sizePhysicalFile ;
         dbpedia:fileExtension ?extensionPhysicalFile ;
         nie:dataSource ?uploadFile .
+      ?derivedFile a nfo:FileDataObject ;
+        mu:uuid ?uuidDerivedFile ;
+        nfo:fileName ?fileNameDerivedFile ;
+        nfo:fileSize ?sizeDerivedFile ;
+        dbpedia:fileExtension ?extensionDerivedFile ;
+        dct:format ?derivedFileFormat ;
+        prov:hadPrimarySource ?uploadFile .
+      ?physicalDerivedFile a nfo:FileDataObject ;
+        mu:uuid ?uuidPhysicalDerivedFile ;
+        nfo:fileName ?fileNamePhysicalDerivedFile ;
+        nfo:fileSize ?sizePhysicalDerivedFile ;
+        dbpedia:fileExtension ?extensionPhysicalDerivedFile ;
+        nie:dataSource ?derivedFile .
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ${sparqlEscapeUri(piece.uri)} a dossier:Stuk ;
-          ext:file ?uploadFile .
+          prov:value ?uploadFile .
         ?uploadFile a nfo:FileDataObject ;
           mu:uuid ?uuidUploadFile ;
           nfo:fileName ?fileNameUploadFile ;
@@ -589,6 +602,21 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
           nfo:fileName ?fileNamePhysicalFile ;
           nfo:fileSize ?sizePhysicalFile ;
           dbpedia:fileExtension ?extensionPhysicalFile .
+        OPTIONAL {
+          ?derivedFile prov:hadPrimarySource ?uploadFile .
+          ?derivedFile a nfo:FileDataObject ;
+            mu:uuid ?uuidDerivedFile ;
+            nfo:fileName ?fileNameDerivedFile ;
+            nfo:fileSize ?sizeDerivedFile ;
+            dbpedia:fileExtension ?extensionDerivedFile ;
+            dct:format ?derivedFileFormat ;
+            ^nie:dataSource ?physicalDerivedFile .
+          ?physicalDerivedFile a nfo:FileDataObject ;
+            mu:uuid ?uuidPhysicalDerivedFile ;
+            nfo:fileName ?fileNamePhysicalDerivedFile ;
+            nfo:fileSize ?sizePhysicalDerivedFile ;
+            dbpedia:fileExtension ?extensionPhysicalDerivedFile .
+        }
       }
     }
   `, graph);
