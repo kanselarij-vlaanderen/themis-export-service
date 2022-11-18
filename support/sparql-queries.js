@@ -237,7 +237,7 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
         ?agendaitem schema:position ?number .
-        ?agendaitemTreatment besluitvorming:heeftOnderwerp ?agendaitem ;
+        ?agendaitemTreatment dct:subject ?agendaitem ;
                              prov:generated ?newsletterInfo .
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
@@ -372,12 +372,13 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
       PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+      PREFIX dct: <http://purl.org/dc/terms/>
 
       SELECT ?uri ?priority
       WHERE {
         GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
           ?agendaitemTreatment prov:generated <${kaleidosNewsitem}> ;
-                               besluitvorming:heeftOnderwerp <${kaleidosAgendaitem}> .
+                               dct:subject <${kaleidosAgendaitem}> .
           ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> ;
                           besluitvorming:vindtPlaatsTijdens ?subcase .
           ?subcase ext:heeftBevoegde ?uri .
@@ -439,12 +440,13 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX mulit: <http://mu.semte.ch/vocabularies/typed-literals/>
+    PREFIX dct: <http://purl.org/dc/terms/>
 
     SELECT ?piece AS ?uri
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ?agendaitemTreatment prov:generated <${kaleidosNewsitem}> ;
-                             besluitvorming:heeftOnderwerp <${kaleidosAgendaitem}> .
+                             dct:subject <${kaleidosAgendaitem}> .
         ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> .
         <${kaleidosAgendaitem}> besluitvorming:geagendeerdStuk ?piece .
         ?piece besluitvorming:vertrouwelijkheidsniveau <${config.kaleidos.accessLevels.public}> .
