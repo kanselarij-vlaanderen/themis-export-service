@@ -447,7 +447,7 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
                              besluitvorming:heeftOnderwerp <${kaleidosAgendaitem}> .
         ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> .
         <${kaleidosAgendaitem}> besluitvorming:geagendeerdStuk ?piece .
-        ?piece ext:toegangsniveauVoorDocumentVersie <${config.kaleidos.accessLevels.public}> .
+        ?piece besluitvorming:vertrouwelijkheidsniveau <${config.kaleidos.accessLevels.public}> .
       }
     }
   `));
