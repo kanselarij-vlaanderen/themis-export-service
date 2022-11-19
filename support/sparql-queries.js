@@ -415,7 +415,6 @@ async function insertNewsitem(newsitem, graph) {
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX dct: <http://purl.org/dc/terms/>
-      PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
       PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
       PREFIX schema: <http://schema.org/>
@@ -437,9 +436,7 @@ async function insertNewsitem(newsitem, graph) {
 async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
   return parseResult(await queryKaleidos(`
     PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    PREFIX mulit: <http://mu.semte.ch/vocabularies/typed-literals/>
     PREFIX dct: <http://purl.org/dc/terms/>
 
     SELECT ?piece AS ?uri
