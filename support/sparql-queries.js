@@ -616,7 +616,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
         nfo:fileName ?fileNamePhysicalFile ;
         nfo:fileSize ?sizePhysicalFile ;
         dbpedia:fileExtension ?extensionPhysicalFile ;
-        nie:dataSource ?uploadFile .
+        nie:dataSource ?derivedFile .
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
