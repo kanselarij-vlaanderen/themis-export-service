@@ -546,7 +546,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
       }
     `);
 
-    // Copy files of piece
+    // Copy source files of piece
     await copyToLocalGraph(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -575,7 +575,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ${sparqlEscapeUri(piece.uri)} a dossier:Stuk ;
-          ext:file ?uploadFile .
+          prov:value ?uploadFile .
         ?uploadFile a nfo:FileDataObject ;
           mu:uuid ?uuidUploadFile ;
           nfo:fileName ?fileNameUploadFile ;
@@ -589,8 +589,53 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
           nfo:fileSize ?sizePhysicalFile ;
           dbpedia:fileExtension ?extensionPhysicalFile .
       }
+    }`, graph);
+
+    // Copy derived files of piece
+    await copyToLocalGraph(`
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+    PREFIX dbpedia: <http://dbpedia.org/ontology/>
+    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX dct: <http://purl.org/dc/terms/>
+
+    CONSTRUCT {
+      ?derivedFile a nfo:FileDataObject ;
+        mu:uuid ?uuidDerivedFile ;
+        nfo:fileName ?fileNameDerivedFile ;
+        nfo:fileSize ?sizeDerivedFile ;
+        dbpedia:fileExtension ?extensionDerivedFile ;
+        dct:format ?format ;
+        prov:hadPrimarySource ?sourceFile .
+      ?physicalFile a nfo:FileDataObject ;
+        mu:uuid ?uuidPhysicalFile ;
+        nfo:fileName ?fileNamePhysicalFile ;
+        nfo:fileSize ?sizePhysicalFile ;
+        dbpedia:fileExtension ?extensionPhysicalFile ;
+        nie:dataSource ?derivedFile .
     }
-  `, graph);
+    WHERE {
+      GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
+        ${sparqlEscapeUri(piece.uri)} a dossier:Stuk ;
+          prov:value ?sourceFile .
+        ?derivedFile prov:hadPrimarySource ?sourceFile .
+        ?derivedFile a nfo:FileDataObject ;
+          mu:uuid ?uuidDerivedFile ;
+          nfo:fileName ?fileNameDerivedFile ;
+          nfo:fileSize ?sizeDerivedFile ;
+          dbpedia:fileExtension ?extensionDerivedFile ;
+          dct:format ?format ;
+          ^nie:dataSource ?physicalFile .
+        ?physicalFile a nfo:FileDataObject ;
+          mu:uuid ?uuidPhysicalFile ;
+          nfo:fileName ?fileNamePhysicalFile ;
+          nfo:fileSize ?sizePhysicalFile ;
+          dbpedia:fileExtension ?extensionPhysicalFile .
+      }
+    }`, graph);
   }
 }
 
