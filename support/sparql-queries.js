@@ -382,7 +382,8 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
           ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> ;
                           besluitvorming:vindtPlaatsTijdens ?subcase .
           ?subcase ext:heeftBevoegde ?uri .
-
+        }
+        GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.public)} {
           OPTIONAL {
               ?uri mandaat:rangorde ?priority .
           }
