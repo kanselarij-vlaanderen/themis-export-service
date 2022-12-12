@@ -335,10 +335,6 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
-    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-    PREFIX dbpedia: <http://dbpedia.org/ontology/>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 
     SELECT ?id ?title ?richtext ?text ?alternative
