@@ -237,8 +237,8 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
         ?agendaitem schema:position ?number .
-        ?agendaitemTreatment dct:subject ?agendaitem ;
-                             prov:generated ?newsletterInfo .
+        ?agendaitemTreatment dct:subject ?agendaitem .
+        ?newsletterInfo prov:wasDerivedFrom ?agendaitemTreatment .
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
         OPTIONAL { ?agendaitem besluitvorming:korteTitel ?shortTitle . }
@@ -335,19 +335,16 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
-    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-    PREFIX dbpedia: <http://dbpedia.org/ontology/>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 
     SELECT ?id ?title ?richtext ?text ?alternative
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosNewsitem}> dct:title ?title ;
                               mu:uuid ?id .
-        OPTIONAL { <${kaleidosNewsitem}> ext:htmlInhoud ?richtext . }
-        OPTIONAL { <${kaleidosNewsitem}> besluitvorming:inhoud ?text . }
-        OPTIONAL { <${kaleidosNewsitem}> dbpedia:subtitle ?alternative . }
+        OPTIONAL { <${kaleidosNewsitem}> nie:htmlContent ?richtext . }
+        OPTIONAL { <${kaleidosNewsitem}> prov:value ?text . }
+        OPTIONAL { <${kaleidosNewsitem}> dct:alternative ?alternative . }
       }
     }`));
 
@@ -377,8 +374,8 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
       SELECT ?uri ?priority
       WHERE {
         GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
-          ?agendaitemTreatment prov:generated <${kaleidosNewsitem}> ;
-                               dct:subject <${kaleidosAgendaitem}> .
+          <${kaleidosNewsitem}> prov:wasDerivedFrom ?agendaitemTreatment .
+          ?agendaitemTreatment dct:subject <${kaleidosAgendaitem}> .
           ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> ;
                           besluitvorming:vindtPlaatsTijdens ?subcase .
           ?subcase ext:heeftBevoegde ?uri .
