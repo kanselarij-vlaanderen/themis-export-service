@@ -222,7 +222,6 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
 }
 
 async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
-  // Note: only newsitems related to a 'Nota' have an ext:afgewerkt flag
   return parseResult(await queryKaleidos(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -244,8 +243,6 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
         OPTIONAL { ?agendaitem besluitvorming:korteTitel ?shortTitle . }
         OPTIONAL { ?agendaitem dct:type ?type . }
         OPTIONAL { ?agendaitem besluit:aangebrachtNa ?previousAgendaitem . }
-        OPTIONAL { ?newsletterInfo ext:afgewerkt ?afgewerkt . }
-        FILTER (?type = ${sparqlEscapeUri(config.export.codelists.agendaitemType.announcement)} || STR(?afgewerkt) = "true")
       }
     }`));
 }
