@@ -237,7 +237,7 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
         ?agendaitem schema:position ?number .
-        ?agendaitemTreatment besluitvorming:heeftOnderwerp ?agendaitem ;
+        ?agendaitemTreatment dct:subject ?agendaitem ;
                              prov:generated ?newsletterInfo .
         ?newsletterInfo ext:inNieuwsbrief "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
         OPTIONAL { ?agendaitem dct:title ?title . }
@@ -372,12 +372,13 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
       PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+      PREFIX dct: <http://purl.org/dc/terms/>
 
       SELECT ?uri ?priority
       WHERE {
         GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
           ?agendaitemTreatment prov:generated <${kaleidosNewsitem}> ;
-                               besluitvorming:heeftOnderwerp <${kaleidosAgendaitem}> .
+                               dct:subject <${kaleidosAgendaitem}> .
           ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> ;
                           besluitvorming:vindtPlaatsTijdens ?subcase .
           ?subcase ext:heeftBevoegde ?uri .
@@ -415,7 +416,6 @@ async function insertNewsitem(newsitem, graph) {
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX dct: <http://purl.org/dc/terms/>
-      PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
       PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
       PREFIX schema: <http://schema.org/>
@@ -437,18 +437,17 @@ async function insertNewsitem(newsitem, graph) {
 async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
   return parseResult(await queryKaleidos(`
     PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    PREFIX mulit: <http://mu.semte.ch/vocabularies/typed-literals/>
+    PREFIX dct: <http://purl.org/dc/terms/>
 
     SELECT ?piece AS ?uri
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ?agendaitemTreatment prov:generated <${kaleidosNewsitem}> ;
-                             besluitvorming:heeftOnderwerp <${kaleidosAgendaitem}> .
+                             dct:subject <${kaleidosAgendaitem}> .
         ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> .
         <${kaleidosAgendaitem}> besluitvorming:geagendeerdStuk ?piece .
-        ?piece ext:toegangsniveauVoorDocumentVersie <${config.kaleidos.accessLevels.public}> .
+        ?piece besluitvorming:vertrouwelijkheidsniveau <${config.kaleidos.accessLevels.public}> .
       }
     }
   `));
@@ -511,7 +510,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ?documentContainer a dossier:Serie ;
-          dossier:collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
+          dossier:Collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
           mu:uuid ?documentContainerUuid .
       }
     }`, graph);
@@ -527,7 +526,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         ?documentContainer a dossier:Serie ;
-          dossier:collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
+          dossier:Collectie.bestaatUit ${sparqlEscapeUri(piece.uri)} ;
           dct:type ?documentType .
       }
     }`, graph);
