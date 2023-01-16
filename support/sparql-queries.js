@@ -437,8 +437,8 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
     SELECT ?piece AS ?uri
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
-        ?agendaitemTreatment prov:generated <${kaleidosNewsitem}> ;
-                             dct:subject <${kaleidosAgendaitem}> .
+        <${kaleidosNewsitem}> prov:wasDerivedFrom ?agendaitemTreatment .
+        ?agendaitemTreatment dct:subject <${kaleidosAgendaitem}> .
         ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> .
         <${kaleidosAgendaitem}> besluitvorming:geagendeerdStuk ?piece .
         ?piece besluitvorming:vertrouwelijkheidsniveau <${config.kaleidos.accessLevels.public}> .
