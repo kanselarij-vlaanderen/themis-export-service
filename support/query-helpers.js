@@ -1,6 +1,7 @@
 import request from 'request';
 import { sparqlEscapeUri } from 'mu';
 import { updateVirtuoso as update } from './virtuoso';
+import config from '../config';
 
 /**
  * Convert results of select query to an array of objects.
@@ -53,7 +54,7 @@ async function constructTriples(query) {
   const format = 'text/plain'; // N-triples format
   const options = {
     method: 'POST',
-    url: process.env.KALEIDOS_SPARQL_ENDPOINT,
+    url: config.endpoints.virtuoso,
     headers: {
       'Accept': format
     },

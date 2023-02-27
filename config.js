@@ -1,4 +1,7 @@
 export default {
+  endpoints: {
+    virtuoso: process.env.VIRTUOSO_SPARQL_ENDPOINT || "http://triplestore:8890/sparql",
+  },
   kaleidos: {
     graphs: {
       kanselarij: 'http://mu.semte.ch/graphs/organizations/kanselarij',

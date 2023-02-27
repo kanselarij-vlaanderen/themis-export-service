@@ -1,8 +1,9 @@
 import httpContext from 'express-http-context';
 import SC2 from 'sparql-client-2';
+import config from '../config';
+
 const { SparqlClient } = SC2;
 
-const virtuosoSparqlEndpoint = process.env.VIRTUOSO_SPARQL_ENDPOINT || "http://virtuoso:8890/sparql";
 const LOG_VIRTUOSO_QUERIES = [true, 'true', 1, '1', 'yes', 'Y', 'on'].includes(process.env.LOG_VIRTUOSO_QUERIES);
 const NB_OF_QUERY_RETRIES = parseInt(process.env.NB_OF_VIRTUOSO_QUERY_RETRIES || 6);
 const RETRY_TIMEOUT_MS = parseInt(process.env.VIRTUOSO_QUERY_RETRY_MILLIS || 1000);
@@ -20,7 +21,7 @@ function virtuosoSparqlClient() {
     options.requestDefaults.headers['mu-call-id'] = httpContext.get('request').get('mu-call-id');
   }
 
-  return new SparqlClient(virtuosoSparqlEndpoint, options);
+  return new SparqlClient(config.endpoints.virtuoso, options);
 }
 
 async function executeQuery(client, queryString, options = { }) {
