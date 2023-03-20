@@ -1,9 +1,18 @@
 import { app, errorHandler } from 'mu';
 import fetch from 'node-fetch';
 import { CronJob } from 'cron';
-import { createJob, getNextScheduledJob, getJob, executeJob, getSummary } from './support/jobs';
+import {
+  createJob,
+  getNextScheduledJob,
+  getJob,
+  executeJob,
+  getSummary,
+  getFailedJobs,
+  incrementJobRetryCount,
+} from './support/jobs';
 import { fetchScheduledPublicationActivities } from './support/polling';
 import sq from './support/sparql-queries';
+import config from './config';
 
 /** Schedule publications from Kaleidos cron job */
 const cronFrequency = process.env.PUBLICATION_CRON_PATTERN || '0 * * * * *';
@@ -11,6 +20,8 @@ const cronFrequency = process.env.PUBLICATION_CRON_PATTERN || '0 * * * * *';
 new CronJob(cronFrequency, function() {
   console.log(`Kaleidos publication polling triggered by cron job at ${new Date().toISOString()}`);
   triggerKaleidosPublications();
+  console.log(`Retrying failed PublicExportJobs triggered by cron job at ${new Date().toISOString()}`);
+  retriggerFailedExportJobs();
 }, null, true);
 
 /**
@@ -129,5 +140,19 @@ async function triggerKaleidosPublications() {
     }
   } else {
     console.log(`Nothing to publish right now.`);
+  }
+}
+
+async function retriggerFailedExportJobs() {
+  const failedJobs = await getFailedJobs();
+  console.debug(failedJobs);
+  for (let job of failedJobs) {
+    if (job.retryCount < config.export.job.maxRetryCount) {
+      console.log(
+        `Retrying failed job <${job.uri}>... [${job.retryCount + 1}/${config.export.job.maxRetryCount}]`
+      );
+      await incrementJobRetryCount(job.uri, job.retryCount);
+      await executeJob(job);
+    }
   }
 }

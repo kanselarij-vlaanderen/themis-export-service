@@ -26,7 +26,8 @@ export default {
         ongoing: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/ongoing',
         success: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/success',
         failure: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/failure'
-      }
+      },
+      maxRetryCount: 5,
     },
     resourceUri: {
       public: function(type, id) { return `http://themis.vlaanderen.be/id/${type}/${id}`; }
