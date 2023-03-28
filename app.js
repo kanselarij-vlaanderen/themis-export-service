@@ -145,14 +145,20 @@ async function triggerKaleidosPublications() {
 
 async function retriggerFailedExportJobs() {
   const failedJobs = await getFailedJobs();
-  console.debug(failedJobs);
-  for (let job of failedJobs) {
-    if (job.retryCount < config.export.job.maxRetryCount) {
-      console.log(
-        `Retrying failed job <${job.uri}>... [${job.retryCount + 1}/${config.export.job.maxRetryCount}]`
-      );
-      await incrementJobRetryCount(job.uri, job.retryCount);
-      await executeJob(job);
+  if (failedJobs.length) {
+    console.log(`Found {failedJobs.length} failed jobs to retry`);
+    for (let job of failedJobs) {
+      if (job.retryCount < config.export.job.maxRetryCount) {
+        console.log(
+          `Retrying failed job <${job.uri}>... [${job.retryCount + 1}/${config.export.job.maxRetryCount}]`
+        );
+        await incrementJobRetryCount(job.uri, job.retryCount);
+        await executeJob(job);
+      } else {
+        console.log(
+          `Skipping failed job <${job.uri}> because max retry count was reached [${job.retryCount}/${config.export.job.maxRetryCount}]`
+        );
+      }
     }
   }
 }
