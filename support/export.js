@@ -259,7 +259,7 @@ async function createTtlToDeltaTask(files) {
       PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
       PREFIX dct: <http://purl.org/dc/terms/>
       INSERT DATA {
-        GRAPH ${config.export.graphs.public} {
+        GRAPH <${config.export.graphs.public}> {
           ${taskUri} a <http://mu.semte.ch/vocabularies/ext/TtlToDeltaTask>;
             adms:status <${status}> .
             ${fileStatements.join('\n')}
