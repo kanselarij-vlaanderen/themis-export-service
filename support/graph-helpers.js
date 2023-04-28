@@ -16,7 +16,7 @@ const batchSize = parseInt(process.env.EXPORT_BATCH_SIZE) || 1000;
  *
  * @return {int} Number of triples written to the file
 */
-async function writeToFile(graph, file, targetGraph = 'http://mu.semte.ch/graphs/public') {
+async function writeToFile(graph, file, targetGraph = config.export.graphs.public) {
   const tmpFile = `${file}.tmp`;
 
   const count = await countTriples(graph);
