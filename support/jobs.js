@@ -1,4 +1,4 @@
-import { sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, uuid } from 'mu';
+import { sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeInt, uuid } from 'mu';
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import { generateExport } from './export';
 import config from '../config';
@@ -189,10 +189,55 @@ async function setGeneratedResource(uri, resource) {
   }`);
 }
 
+async function getFailedJobs() {
+  const result = await query(`
+    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    SELECT ?uri ?meetingUri ?retryCount WHERE {
+      GRAPH ${sparqlEscapeUri(config.export.graphs.job)} {
+        ?uri a ext:PublicExportJob ;
+             prov:used ?meetingUri ;
+             adms:status ${sparqlEscapeUri(config.export.job.statuses.failure)} .
+        OPTIONAL { ?uri ext:retryCount ?retryCount }
+      }
+    }`);
+
+  return result
+    .results.bindings
+    .map(b => ({
+      uri: b['uri'].value,
+      meeting: b['meetingUri'].value,
+      retryCount: parseInt(b['retryCount']?.value ?? 0),
+    }));
+}
+
+async function incrementJobRetryCount(uri, retryCount) {
+  if (retryCount) {
+    await update(`
+  PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+  DELETE DATA {
+    GRAPH <${config.export.graphs.job}> {
+      ${sparqlEscapeUri(uri)} ext:retryCount ${sparqlEscapeInt(retryCount)}
+    }
+  }`);
+  }
+
+  await update(`
+  PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+  INSERT DATA {
+    GRAPH <${config.export.graphs.job}> {
+      ${sparqlEscapeUri(uri)} ext:retryCount ${sparqlEscapeInt(retryCount + 1)}
+    }
+  }`);
+}
+
 export {
   createJob,
   getNextScheduledJob,
   getJob,
   executeJob,
-  getSummary
+  getSummary,
+  getFailedJobs,
+  incrementJobRetryCount,
 };
