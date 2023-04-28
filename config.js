@@ -20,7 +20,7 @@ export default {
   export: {
     graphs: {
       job: 'http://mu.semte.ch/graphs/kaleidos-export',
-      public: 'http://mu.semte.ch/graphs/public',
+      public: 'http://mu.semte.ch/graphs/themis-public',
       tmp: function(timestamp) { return `http://mu.semte.ch/graphs/tmp/${timestamp}`; }
     },
     job: {
