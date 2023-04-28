@@ -1,5 +1,4 @@
 import { uuid, sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeInt } from 'mu';
-import { queryKaleidos } from './kaleidos';
 // All intermediate data is written directly to Virtuoso in order to not generate delta notifications for these data insertions
 // Virtuoso is just used here as a temporary store to gather data before writing it to a file
 import { queryVirtuoso as query, updateVirtuoso as update } from './virtuoso';
@@ -13,7 +12,7 @@ async function getMeeting({ uri, id }) {
   } else {
     subjectStatement = `?uri mu:uuid ${sparqlEscapeString(id)} .`;
   }
-  const sessions = parseResult(await queryKaleidos(`
+  const sessions = parseResult(await query(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -36,7 +35,7 @@ async function getMeeting({ uri, id }) {
 async function copyMeeting(uri, graph) {
   await copyToLocalGraph(`
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 
     CONSTRUCT {
@@ -143,8 +142,8 @@ async function getPreviousPublicationActivity(meeting) {
 }
 
 async function getLatestAgendaOfMeeting(meeting) {
-  let agendas = parseResult(await queryKaleidos(`
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+  let agendas = parseResult(await query(`
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
 
     SELECT ?uri ?serialNumber ?title WHERE {
@@ -156,8 +155,8 @@ async function getLatestAgendaOfMeeting(meeting) {
 
   if (!agendas.length) {
     console.log(`No agenda found. Trying pre-Kaleidos query to retrieve agenda for meeting <${meeting}>`);
-    agendas = parseResult(await queryKaleidos(`
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+    agendas = parseResult(await query(`
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
@@ -180,7 +179,7 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 
     INSERT DATA {
       GRAPH <${graph}> {
@@ -200,7 +199,7 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
   if (previousPublication) {
     await update(`
       PREFIX prov: <http://www.w3.org/ns/prov#>
-      PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+      PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 
       INSERT {
         GRAPH <${graph}> {
@@ -222,11 +221,11 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
 }
 
 async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
-  return parseResult(await queryKaleidos(`
+  return parseResult(await query(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX schema: <http://schema.org/>
@@ -274,7 +273,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX dct: <http://purl.org/dc/terms/>
-      PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+      PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
       PREFIX schema: <http://schema.org/>
 
@@ -296,7 +295,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
     if (previousPublication) {
       await update(`
         PREFIX prov: <http://www.w3.org/ns/prov#>
-        PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+        PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
         PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
 
         INSERT {
@@ -328,7 +327,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
 }
 
 async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
-  const newsitems = parseResult(await queryKaleidos(`
+  const newsitems = parseResult(await query(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -350,7 +349,7 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
   if (newsitem) {
     newsitem.uri = kaleidosNewsitem;
 
-    newsitem.themes = parseResult(await queryKaleidos(`
+    newsitem.themes = parseResult(await query(`
       PREFIX dct: <http://purl.org/dc/terms/>
 
       SELECT ?uri
@@ -361,9 +360,9 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
       }
     `));
 
-    newsitem.mandatees = parseResult(await queryKaleidos(`
+    newsitem.mandatees = parseResult(await query(`
       PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-      PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+      PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
       PREFIX dct: <http://purl.org/dc/terms/>
@@ -429,8 +428,8 @@ async function insertNewsitem(newsitem, graph) {
 }
 
 async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
-  return parseResult(await queryKaleidos(`
-    PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+  return parseResult(await query(`
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
 
@@ -528,7 +527,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     // Link pieces to newsitem
     await update(`
       PREFIX prov: <http://www.w3.org/ns/prov#>
-      PREFIX besluitvorming: <http://data.vlaanderen.be/ns/besluitvorming#>
+      PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 
       INSERT {
         GRAPH <${graph}> {

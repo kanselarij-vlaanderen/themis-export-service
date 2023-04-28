@@ -4,6 +4,7 @@ import { sparqlEscapeUri } from 'mu';
 // All intermediate data is written directly to Virtuoso in order to not generate delta notifications for these data insertions
 // Virtuoso is just used here as a temporary store to gather data before writing it to a file
 import { queryVirtuoso as query } from './virtuoso';
+import config from '../config';
 
 const batchSize = parseInt(process.env.EXPORT_BATCH_SIZE) || 1000;
 
@@ -66,7 +67,7 @@ async function appendBatch(file, query, offset = 0) {
   const format = 'text/turtle';
   const options = {
     method: 'POST',
-    url: process.env.VIRTUOSO_SPARQL_ENDPOINT,
+    url: config.endpoints.virtuoso,
     headers: {
       'Accept': format
     },

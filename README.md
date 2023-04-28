@@ -5,7 +5,7 @@ Microservice that exports data from Kaleidos to be published on [Themis](https:/
 ### Add the export service to your stack
 Add the following snippet to your `docker-compose.yml`:
 ```yml
-  export:
+  themis-export:
     image: kanselarij-vlaanderen/themis-export-service
     links:
       - database:database
@@ -16,22 +16,6 @@ Add the following snippet to your `docker-compose.yml`:
 The final result of the export will be written to the volume mounted in `/share`.
 
 ## How-to guides
-### How to query a remote Kaleidos triple store
-To run the export querying a Kaleidos triple store on a remote server, setup an SSH tunnel with port forwarding on your `docker0` network interface (probably IP 172.17.0.1):
-```bash
-ssh kaleidos-server -L 172.17.0.1:8895:<kaleidos-triple-store-container-ip>:8890
-```
-
-Add an extra host `kaleidos` to the export service pointing to the `docker0` network and configure the `KALEIDOS_SPARQL_ENDPOINT` environment variable.
-```yml
-  export:
-    ...
-    environment:
-      KALEIDOS_SPARQL_ENDPOINT: "http://kaleidos:8895/sparql"
-    extra_hosts:
-      - "kaleidos:172.17.0.1"
-```
-
 ### How to trigger an export
 An export can be triggered in 2 ways:
 1. By manually calling the API endpoint for a specific meeting
@@ -40,9 +24,8 @@ An export can be triggered in 2 ways:
 ## Reference
 ### Configuration
 The following environment variables can be configured:
-* `MU_SPARQL_ENDPOINT` (default: http://database:8890/sparql): SPARQL endpoint of the internal triple store to write intermediate results to
-* `VIRTUOSO_SPARQL_ENDPOINT` (default: http://virtuoso:8890/sparql): SPARQL endpoint of the Virtuoso triple store, in order to extract the ttl files.
-* `KALEIDOS_SPARQL_ENDPOINT` (default: http://kaleidos:8890/sparql): SPARQL endpoint of the Kaleidos triple store
+* `MU_SPARQL_ENDPOINT` (default: http://database:8890/sparql): mu-authorization based SPARQL endpoint of the internal triple store to write intermediate results to that will trigger delta notifications
+* `VIRTUOSO_SPARQL_ENDPOINT` (default: http://triplestore:8890/sparql): SPARQL endpoint of the Virtuoso triple store, in order to perform fast queries skipping mu-authorization and to extract the ttl files
 * `EXPORT_BATCH_SIZE` (default: 1000): number of triples to export in batch in the final dump
 * `PUBLICATION_CRON_PATTERN` (default `0 * * * * *` = every minute): frequency to fetch for scheduled publications in Kaleidos
 * `PUBLICATION_WINDOW_MILLIS` (default: 24h): max window to fetch publication-activities in Kaleidos for. The window determines the period in which scheduled publications will still be executed (in delay) if this export service is not running at the moment the publication was originally planned.
@@ -59,7 +42,7 @@ The following environment variables can be configured:
 | ext    | http://mu.semte.ch/vocabularies/ext |
 
 #### Public export job
-Resource respresenting an export job. Jobs are executed one by one using the FIFO approach.
+Resource representing an export job. Jobs are executed one by one using the FIFO approach.
 ##### Class
 `ext:PublicExportJob`
 ##### Properties
