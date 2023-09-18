@@ -29,6 +29,7 @@ function parseResult(result) {
  *
  * @param [string} query Construct query to execute on the Kaleidos triple store
  * @param {string} graph URI of the graph to insert the resulting triples in
+ * @returns {bool} False if no triples were copied, else true.
 */
 async function copyToLocalGraph(query, graph) {
   try {
@@ -42,6 +43,9 @@ async function copyToLocalGraph(query, graph) {
         }
       `;
       await update(insertQuery);
+      return true;
+    } else {
+      return false;
     }
   } catch (e) {
     console.log(`Something went wrong while executing query: ${query}. Nothing inserted in the store.`);
