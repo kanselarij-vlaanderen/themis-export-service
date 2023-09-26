@@ -85,14 +85,21 @@ async function getNextScheduledJob() {
   PREFIX prov: <http://www.w3.org/ns/prov#>
   PREFIX adms: <http://www.w3.org/ns/adms#>
 
-  SELECT ?uri ?id ?meeting
+  SELECT ?uri ?id ?meeting ?retryCount
   WHERE {
     GRAPH <${config.export.graphs.job}> {
+      VALUES ?status {
+        ${sparqlEscapeUri(config.export.job.statuses.scheduled)}
+        ${sparqlEscapeUri(config.export.job.statuses.failure)}
+      }
       ?uri a ext:PublicExportJob ;
            mu:uuid ?id ;
            dct:created ?created ;
            prov:used ?meeting ;
-           adms:status ${sparqlEscapeUri(config.export.job.statuses.scheduled)} .
+           adms:status ?status .
+      OPTIONAL { ?uri ext:retryCount ?maybeRetryCount }
+      BIND(IF(BOUND(?maybeRetryCount), ?maybeRetryCount, 0) AS ?retryCount)
+      FILTER (?retryCount < ${sparqlEscapeInt(config.export.job.maxRetryCount)})
       FILTER NOT EXISTS {
         ?job a ext:PublicExportJob ;
            adms:status ${sparqlEscapeUri(config.export.job.statuses.ongoing)} .
@@ -105,7 +112,8 @@ async function getNextScheduledJob() {
     return {
       id: bindings[0]['id'].value,
       uri: bindings[0]['uri'].value,
-      meeting: bindings[0]['meeting'].value
+      meeting: bindings[0]['meeting'].value,
+      retryCount: parseInt(bindings[0]['retryCount'].value),
     };
   } else {
     return null;
@@ -174,9 +182,12 @@ async function executeJob(job) {
     await updateJobStatus(job.uri, config.export.job.statuses.success);
     console.log(`Successfully finished job <${job.uri}>`);
   } catch (e) {
-    console.log(`Execution of job <${job.uri}> failed: ${e}`);
+    console.log(
+      `Execution of job <${job.uri}> failed [tries: ${job.retryCount + 1}/${config.export.job.maxRetryCount}]: ${e}`
+    );
     console.trace(e);
     await updateJobStatus(job.uri, config.export.job.statuses.failure);
+    await incrementJobRetryCount(job.uri, job.retryCount);
   }
 }
 
@@ -225,39 +236,14 @@ async function setGeneratedResource(uri, resource) {
   }`);
 }
 
-async function getFailedJobs() {
-  const result = await query(`
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-    PREFIX adms: <http://www.w3.org/ns/adms#>
-    PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?uri ?meetingUri ?retryCount WHERE {
-      GRAPH ${sparqlEscapeUri(config.export.graphs.job)} {
-        ?uri a ext:PublicExportJob ;
-             prov:used ?meetingUri ;
-             adms:status ${sparqlEscapeUri(config.export.job.statuses.failure)} .
-        OPTIONAL { ?uri ext:retryCount ?retryCount }
-      }
-    }`);
-
-  return result
-    .results.bindings
-    .map(b => ({
-      uri: b['uri'].value,
-      meeting: b['meetingUri'].value,
-      retryCount: parseInt(b['retryCount']?.value ?? 0),
-    }));
-}
-
 async function incrementJobRetryCount(uri, retryCount) {
-  if (retryCount) {
-    await update(`
+  await update(`
   PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-  DELETE DATA {
+  DELETE WHERE {
     GRAPH <${config.export.graphs.job}> {
-      ${sparqlEscapeUri(uri)} ext:retryCount ${sparqlEscapeInt(retryCount)}
+      ${sparqlEscapeUri(uri)} ext:retryCount ?retryCount .
     }
   }`);
-  }
 
   await update(`
   PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -275,6 +261,5 @@ export {
   getJob,
   executeJob,
   getSummary,
-  getFailedJobs,
   incrementJobRetryCount,
 };
