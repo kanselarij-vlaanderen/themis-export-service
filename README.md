@@ -42,7 +42,7 @@ The following environment variables can be configured:
 | ext    | http://mu.semte.ch/vocabularies/ext |
 
 #### Public export job
-Resource representing an export job. Jobs are executed one by one using the FIFO approach.
+Resource representing an export job. Jobs are executed one by one using the FIFO approach. When an export job fails, it will be retried up to 5 times before being permanently marked as a failed job.
 ##### Class
 `ext:PublicExportJob`
 ##### Properties
