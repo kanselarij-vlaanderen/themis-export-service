@@ -16,7 +16,7 @@ class JobManager {
     let hasRun = false;
     try {
       this.isExecuting = true;
-      const job = await getNextScheduledJob()
+      const job = await getNextScheduledJob();
       if (job) {
         console.debug(`Found next scheduled job <${job.uri}>, executing...`);
         await executeJob(job);
@@ -257,9 +257,6 @@ async function incrementJobRetryCount(uri, retryCount) {
 export {
   JobManager,
   createJob,
-  getNextScheduledJob,
   getJob,
-  executeJob,
   getSummary,
-  incrementJobRetryCount,
 };
