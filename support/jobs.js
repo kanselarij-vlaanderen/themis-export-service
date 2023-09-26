@@ -3,6 +3,41 @@ import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import { generateExport } from './export';
 import config from '../config';
 
+class JobManager {
+  constructor() {
+    this.isExecuting = false;
+  }
+
+  async run() {
+    if (this.isExecuting) {
+      return;
+    }
+
+    let hasRun = false;
+    try {
+      this.isExecuting = true;
+      const job = await getNextScheduledJob()
+      if (job) {
+        console.debug(`Found next scheduled job <${job.uri}>, executing...`);
+        await executeJob(job);
+        hasRun = true;
+      } else {
+        console.debug('No job found in current execution of JobManager#run');
+      }
+    } catch (error) {
+      console.log(`Unexpected error was raised during execution of job: ${error}`);
+      console.trace(error);
+    } finally {
+      this.isExecuting = false;
+      if (hasRun) {
+        // If we found a scheduled job this run, re-trigger in case there's more
+        // Otherwise we just wait until we get triggered by the poll-rate
+        this.run();
+      }
+    }
+  }
+}
+
 async function createJob(meeting, scopes, source = null) {
   const jobUuid = uuid();
   const jobUri = `http://data.kaleidos.vlaanderen.be/public-export-jobs/${jobUuid}`;
@@ -233,6 +268,7 @@ async function incrementJobRetryCount(uri, retryCount) {
 }
 
 export {
+  JobManager,
   createJob,
   getNextScheduledJob,
   getJob,
