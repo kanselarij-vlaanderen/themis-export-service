@@ -50,6 +50,7 @@ async function createJob(meeting, scopes, source = null) {
 
   const now = new Date();
 
+  console.log(`Creating job with uri ${sparqlEscapeUri(jobUri)} for meeting ${sparqlEscapeUri(meeting)}`);
   await update(`
   PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
   PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
