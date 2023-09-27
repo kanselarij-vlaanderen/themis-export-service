@@ -3,8 +3,8 @@ import request from 'request';
 import { sparqlEscapeUri } from 'mu';
 // All intermediate data is written directly to Virtuoso in order to not generate delta notifications for these data insertions
 // Virtuoso is just used here as a temporary store to gather data before writing it to a file
-import { queryVirtuoso as query } from './virtuoso';
 import { querySudo } from '@lblod/mu-auth-sudo';
+import { queryVirtuoso } from './virtuoso';
 import config from '../config';
 
 const batchSize = parseInt(process.env.EXPORT_BATCH_SIZE) || 1000;
@@ -95,11 +95,11 @@ async function appendBatch(file, query, offset = 0) {
 }
 
 async function add(source, target) {
-  await query(`ADD SILENT GRAPH <${source}> TO <${target}>`);
+  await queryVirtuoso(`ADD SILENT GRAPH <${source}> TO <${target}>`);
 }
 
 async function clean(graph) {
-  await query(`DROP SILENT GRAPH <${graph}>`);
+  await queryVirtuoso(`DEFINE sql:log-enable 3 DROP SILENT GRAPH <${graph}>`);
 }
 
 export {
