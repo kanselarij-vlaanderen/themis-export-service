@@ -4,6 +4,7 @@ import { sparqlEscapeUri } from 'mu';
 // All intermediate data is written directly to Virtuoso in order to not generate delta notifications for these data insertions
 // Virtuoso is just used here as a temporary store to gather data before writing it to a file
 import { queryVirtuoso as query } from './virtuoso';
+import { querySudo } from '@lblod/mu-auth-sudo';
 import config from '../config';
 
 const batchSize = parseInt(process.env.EXPORT_BATCH_SIZE) || 1000;
@@ -51,7 +52,7 @@ async function writeToFile(graph, file, targetGraph = config.export.graphs.publi
 }
 
 async function countTriples(graph) {
-  const queryResult = await query(`
+  const queryResult = await querySudo(`
       SELECT (COUNT(*) as ?count)
       WHERE {
         GRAPH ${sparqlEscapeUri(graph)} {
