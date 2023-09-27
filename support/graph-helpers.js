@@ -30,11 +30,12 @@ async function writeToFile(graph, file, targetGraph = config.export.graphs.publi
         ?s ?p ?o
       }
       WHERE {
-        GRAPH ${sparqlEscapeUri(graph)} {
-          ?s ?p ?o .
-        }
+        { SELECT ?s ?p ?o WHERE {
+            GRAPH ${sparqlEscapeUri(graph)} {
+              ?s ?p ?o .
+            }
+          } ORDER BY ?s LIMIT ${batchSize} OFFSET %OFFSET }
       }
-      LIMIT ${batchSize} OFFSET %OFFSET
     `;
 
     while (offset < count) {
