@@ -552,6 +552,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     PREFIX dct: <http://purl.org/dc/terms/>
 
     CONSTRUCT {
+      ${sparqlEscapeUri(piece.uri)} prov:value ?derivedFile .
       ?derivedFile a nfo:FileDataObject ;
         mu:uuid ?uuidDerivedFile ;
         nfo:fileName ?fileNameDerivedFile ;
