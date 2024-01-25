@@ -1,3 +1,4 @@
+import { querySudo as query } from '@lblod/mu-auth-sudo';
 import { sparqlEscapeUri, sparqlEscapeDateTime } from 'mu';
 import { parseResult } from './query-helpers';
 import config from '../config.js';
