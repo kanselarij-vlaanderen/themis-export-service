@@ -1,7 +1,8 @@
 import { uuid, sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeInt } from 'mu';
 // All intermediate data is written directly to Virtuoso in order to not generate delta notifications for these data insertions
 // Virtuoso is just used here as a temporary store to gather data before writing it to a file
-import { queryVirtuoso as query, updateVirtuoso as update } from './virtuoso';
+import { querySudo } from '@lblod/mu-auth-sudo';
+import { updateVirtuoso } from './virtuoso';
 import { parseResult, copyToLocalGraph } from './query-helpers';
 import config from '../config.js';
 
@@ -12,7 +13,7 @@ async function getMeeting({ uri, id }) {
   } else {
     subjectStatement = `?uri mu:uuid ${sparqlEscapeString(id)} .`;
   }
-  const sessions = parseResult(await query(`
+  const sessions = parseResult(await querySudo(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -100,7 +101,7 @@ async function insertPublicationActivity(meeting, graph) {
   const activity = config.export.resourceUri.public('publicatie-activiteit', id);
   const now = new Date();
 
-  await update(`
+  await updateVirtuoso(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -123,7 +124,7 @@ async function insertPublicationActivity(meeting, graph) {
 }
 
 async function getPreviousPublicationActivity(meeting) {
-  const publications = parseResult(await query(`
+  const publications = parseResult(await querySudo(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -142,7 +143,7 @@ async function getPreviousPublicationActivity(meeting) {
 }
 
 async function getLatestAgendaOfMeeting(meeting) {
-  let agendas = parseResult(await query(`
+  let agendas = parseResult(await querySudo(`
     PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
 
@@ -155,7 +156,7 @@ async function getLatestAgendaOfMeeting(meeting) {
 
   if (!agendas.length) {
     console.log(`No agenda found. Trying pre-Kaleidos query to retrieve agenda for meeting <${meeting}>`);
-    agendas = parseResult(await query(`
+    agendas = parseResult(await querySudo(`
     PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -175,7 +176,7 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
   const title = kaleidosAgenda.title ? `Publieke ${kaleidosAgenda.title}` : 'Publieke agenda';
   const now = new Date();
 
-  await update(`
+  await updateVirtuoso(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -197,7 +198,7 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
   `);
 
   if (previousPublication) {
-    await update(`
+    await updateVirtuoso(`
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 
@@ -221,7 +222,7 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
 }
 
 async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
-  return parseResult(await query(`
+  return parseResult(await querySudo(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -230,7 +231,7 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX schema: <http://schema.org/>
 
-    SELECT ?agendaitem AS ?uri ?number ?title ?shortTitle ?type ?previousAgendaitem ?newsletterInfo
+    SELECT (?agendaitem AS ?uri) ?number ?title ?shortTitle ?type ?previousAgendaitem ?newsletterInfo
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosAgenda.uri}> dct:hasPart ?agendaitem .
@@ -269,7 +270,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
         optionalStatements.push(`<${agendaitem.publicUri}> besluit:aangebrachtNa ${sparqlEscapeUri(previousAgendaitem.publicUri)} .`);
     }
 
-    await update(`
+    await updateVirtuoso(`
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX dct: <http://purl.org/dc/terms/>
@@ -293,7 +294,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
       }`);
 
     if (previousPublication) {
-      await update(`
+      await updateVirtuoso(`
         PREFIX prov: <http://www.w3.org/ns/prov#>
         PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
         PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
@@ -327,7 +328,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
 }
 
 async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
-  const newsitems = parseResult(await query(`
+  const newsitems = parseResult(await querySudo(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -349,7 +350,7 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
   if (newsitem) {
     newsitem.uri = kaleidosNewsitem;
 
-    newsitem.themes = parseResult(await query(`
+    newsitem.themes = parseResult(await querySudo(`
       PREFIX dct: <http://purl.org/dc/terms/>
 
       SELECT ?uri
@@ -360,7 +361,7 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
       }
     `));
 
-    newsitem.mandatees = parseResult(await query(`
+    newsitem.mandatees = parseResult(await querySudo(`
       PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
       PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -405,7 +406,7 @@ async function insertNewsitem(newsitem, graph) {
   if (newsitem.mandatees.length)
     optionalStatements.push(...newsitem.mandatees.map(mandatee => `<${newsitem.uri}> prov:qualifiedAssociation ${sparqlEscapeUri(mandatee.uri)} .`));
 
-  await update(`
+  await updateVirtuoso(`
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX dct: <http://purl.org/dc/terms/>
@@ -428,12 +429,12 @@ async function insertNewsitem(newsitem, graph) {
 }
 
 async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
-  return parseResult(await query(`
+  return parseResult(await querySudo(`
     PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
 
-    SELECT ?piece AS ?uri
+    SELECT (?piece AS ?uri)
     WHERE {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosNewsitem}> prov:wasDerivedFrom ?agendaitemTreatment .
@@ -525,7 +526,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     }`, graph);
 
     // Link pieces to newsitem
-    await update(`
+    await updateVirtuoso(`
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 
@@ -540,53 +541,8 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
       }
     `);
 
-    // Copy source files of piece
-    await copyToLocalGraph(`
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-    PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
-    PREFIX dbpedia: <http://dbpedia.org/ontology/>
-    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-    PREFIX prov: <http://www.w3.org/ns/prov#>
-    PREFIX dct: <http://purl.org/dc/terms/>
-
-    CONSTRUCT {
-      ${sparqlEscapeUri(piece.uri)} prov:value ?uploadFile .
-      ?uploadFile a nfo:FileDataObject ;
-        mu:uuid ?uuidUploadFile ;
-        nfo:fileName ?fileNameUploadFile ;
-        nfo:fileSize ?sizeUploadFile ;
-        dbpedia:fileExtension ?extensionUploadFile ;
-        dct:format ?format .
-      ?physicalFile a nfo:FileDataObject ;
-        mu:uuid ?uuidPhysicalFile ;
-        nfo:fileName ?fileNamePhysicalFile ;
-        nfo:fileSize ?sizePhysicalFile ;
-        dbpedia:fileExtension ?extensionPhysicalFile ;
-        nie:dataSource ?uploadFile .
-    }
-    WHERE {
-      GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
-        ${sparqlEscapeUri(piece.uri)} a dossier:Stuk ;
-          prov:value ?uploadFile .
-        ?uploadFile a nfo:FileDataObject ;
-          mu:uuid ?uuidUploadFile ;
-          nfo:fileName ?fileNameUploadFile ;
-          nfo:fileSize ?sizeUploadFile ;
-          dbpedia:fileExtension ?extensionUploadFile ;
-          dct:format ?format ;
-          ^nie:dataSource ?physicalFile .
-        ?physicalFile a nfo:FileDataObject ;
-          mu:uuid ?uuidPhysicalFile ;
-          nfo:fileName ?fileNamePhysicalFile ;
-          nfo:fileSize ?sizePhysicalFile ;
-          dbpedia:fileExtension ?extensionPhysicalFile .
-      }
-    }`, graph);
-
     // Copy derived files of piece
-    await copyToLocalGraph(`
+    const derivedFilesCopied = await copyToLocalGraph(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -597,6 +553,7 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
     PREFIX dct: <http://purl.org/dc/terms/>
 
     CONSTRUCT {
+      ${sparqlEscapeUri(piece.uri)} prov:value ?derivedFile .
       ?derivedFile a nfo:FileDataObject ;
         mu:uuid ?uuidDerivedFile ;
         nfo:fileName ?fileNameDerivedFile ;
@@ -630,6 +587,53 @@ async function insertDocuments(kaleidosPieces, agendaitem, graph) {
           dbpedia:fileExtension ?extensionPhysicalFile .
       }
     }`, graph);
+
+    if (!derivedFilesCopied) {
+      // Copy source files of piece
+      await copyToLocalGraph(`
+      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+      PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+      PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+      PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+      PREFIX dbpedia: <http://dbpedia.org/ontology/>
+      PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+      PREFIX dct: <http://purl.org/dc/terms/>
+
+      CONSTRUCT {
+        ${sparqlEscapeUri(piece.uri)} prov:value ?uploadFile .
+        ?uploadFile a nfo:FileDataObject ;
+          mu:uuid ?uuidUploadFile ;
+          nfo:fileName ?fileNameUploadFile ;
+          nfo:fileSize ?sizeUploadFile ;
+          dbpedia:fileExtension ?extensionUploadFile ;
+          dct:format ?format .
+        ?physicalFile a nfo:FileDataObject ;
+          mu:uuid ?uuidPhysicalFile ;
+          nfo:fileName ?fileNamePhysicalFile ;
+          nfo:fileSize ?sizePhysicalFile ;
+          dbpedia:fileExtension ?extensionPhysicalFile ;
+          nie:dataSource ?uploadFile .
+      }
+      WHERE {
+        GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
+          ${sparqlEscapeUri(piece.uri)} a dossier:Stuk ;
+            prov:value ?uploadFile .
+          ?uploadFile a nfo:FileDataObject ;
+            mu:uuid ?uuidUploadFile ;
+            nfo:fileName ?fileNameUploadFile ;
+            nfo:fileSize ?sizeUploadFile ;
+            dbpedia:fileExtension ?extensionUploadFile ;
+            dct:format ?format ;
+            ^nie:dataSource ?physicalFile .
+          ?physicalFile a nfo:FileDataObject ;
+            mu:uuid ?uuidPhysicalFile ;
+            nfo:fileName ?fileNamePhysicalFile ;
+            nfo:fileSize ?sizePhysicalFile ;
+            dbpedia:fileExtension ?extensionPhysicalFile .
+        }
+      }`, graph);
+    }
   }
 }
 

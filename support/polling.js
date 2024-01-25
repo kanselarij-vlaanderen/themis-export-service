@@ -1,5 +1,4 @@
 import { sparqlEscapeUri, sparqlEscapeDateTime } from 'mu';
-import { queryVirtuoso } from './virtuoso';
 import { parseResult } from './query-helpers';
 import config from '../config.js';
 
@@ -25,7 +24,7 @@ async function getRecentPublicationActivities() {
   const now = new Date();
   const publicationWindowStart = new Date(now.getTime() - config.kaleidos.publication.window);
 
-  const result = await queryVirtuoso(`
+  const result = await query(`
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -65,7 +64,7 @@ async function getRecentPublicationActivities() {
 }
 
 async function getScope(publicationActivity) {
-  const scope = parseResult(await queryVirtuoso(`
+  const scope = parseResult(await query(`
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     SELECT ?label
