@@ -11,30 +11,10 @@ async function fetchScheduledPublicationActivities() {
   const publicationActivities = await getRecentPublicationActivities();
   const unpublishedActivities = [];
   for (let publicationActivity of publicationActivities) {
-    const isPublished = await hasBeenPublished(publicationActivity.uri);
-    if (!isPublished) {
-      publicationActivity.scope = await getScope(publicationActivity.uri);
-      unpublishedActivities.push(publicationActivity);
-    }
+    publicationActivity.scope = await getScope(publicationActivity.uri);
+    unpublishedActivities.push(publicationActivity);
   }
   return unpublishedActivities;
-}
-
-async function hasBeenPublished(publicationActivity) {
-  const jobs = parseResult(await query(`
-      PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-      PREFIX dct: <http://purl.org/dc/terms/>
-
-      SELECT ?uri
-      WHERE {
-        GRAPH <${config.export.graphs.job}> {
-          ?uri a ext:PublicExportJob ;
-            dct:source ${sparqlEscapeUri(publicationActivity)} .
-        }
-      } LIMIT 1
-    `));
-
-  return jobs.length != 0;
 }
 
 /**
@@ -50,6 +30,7 @@ async function getRecentPublicationActivities() {
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX adms: <http://www.w3.org/ns/adms#>
+    PREFIX dct: <http://purl.org/dc/terms/>
 
     SELECT ?uri ?meeting ?meetingId ?plannedStart
     WHERE {
@@ -62,6 +43,9 @@ async function getRecentPublicationActivities() {
         FILTER(?plannedStart >= ${sparqlEscapeDateTime(publicationWindowStart)})
         FILTER(?plannedStart <= ${sparqlEscapeDateTime(now)})
         ?meeting mu:uuid ?meetingId .
+      }
+      GRAPH ${sparqlEscapeUri(config.export.graphs.job)} {
+        FILTER NOT EXISTS { ?job a ext:PublicExportJob ; dct:source ?uri }
       }
     } ORDER BY ?plannedStart
   `);
