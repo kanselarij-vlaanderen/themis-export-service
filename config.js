@@ -25,10 +25,10 @@ export default {
     },
     job: {
       statuses: {
-        scheduled: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/scheduled',
-        ongoing: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/ongoing',
-        success: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/success',
-        failure: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/failure'
+        scheduled: 'http://vocab.deri.ie/cogs#Scheduled',
+        ongoing: 'http://vocab.deri.ie/cogs#Running',
+        success: 'http://vocab.deri.ie/cogs#Success',
+        failure: 'http://vocab.deri.ie/cogs#Fail'
       },
       maxRetryCount: 5,
     },

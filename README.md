@@ -48,7 +48,7 @@ Resource representing an export job. Jobs are executed one by one using the FIFO
 ##### Properties
 | Name    | Predicate     | Range           | Definition                                                                                                             |
 |---------|---------------|-----------------|------------------------------------------------------------------------------------------------------------------------|
-| status  | `adms:status` | `rdfs:Resource` | Status of the export job, initially set to `<http://data.kaleidos.vlaanderen.be/public-export-job-statuses/scheduled>` |
+| status  | `adms:status` | `rdfs:Resource` | Status of the export job, initially set to `<http://vocab.deri.ie/cogs#Scheduled>` |
 | meeting | `prov:used`   | `rdfs:Resource` | Meeting (in Kaleidos) the export job is executed for                                                                   |
 | created | `dct:created` | `xsd:dateTime`  | Datetime of creation of the job                                                                                        |
 | scope   | `ext:scope`   | `xsd:string`    | Scope of the export jobs. Possible values are `newsitems` and `documents`. A job may contain multiple scopes.          |
@@ -57,10 +57,10 @@ Resource representing an export job. Jobs are executed one by one using the FIFO
 
 #### Export job statuses
 The status of the export job will be updated to reflect the progress of the job. The following statuses are known:
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/scheduled
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/ongoing
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/success
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/failure
+* http://vocab.deri.ie/cogs#Scheduled
+* http://vocab.deri.ie/cogs#Running
+* http://vocab.deri.ie/cogs#Success
+* http://vocab.deri.ie/cogs#Fail
 
 #### Themis publication activity
 Resource respresenting a planned publication for a meeting. This resource resides in the Kaleidos DB.
