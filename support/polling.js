@@ -45,7 +45,7 @@ async function getRecentPublicationActivities() {
         ?meeting mu:uuid ?meetingId .
       }
       GRAPH ${sparqlEscapeUri(config.export.graphs.job)} {
-        FILTER NOT EXISTS { ?job a ext:PublicExportJob ; dct:source ?uri }
+        FILTER NOT EXISTS { ?job a ${sparqlEscapeUri(config.export.job.rdfType)} ; dct:source ?uri }
       }
     } ORDER BY ?plannedStart
   `);

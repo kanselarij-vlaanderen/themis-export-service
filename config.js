@@ -25,12 +25,13 @@ export default {
     },
     job: {
       statuses: {
-        scheduled: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/scheduled',
-        ongoing: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/ongoing',
-        success: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/success',
-        failure: 'http://data.kaleidos.vlaanderen.be/public-export-job-statuses/failure'
+        scheduled: 'http://redpencil.data.gift/id/concept/JobStatus/scheduled',
+        busy: 'http://redpencil.data.gift/id/concept/JobStatus/busy',
+        success: 'http://redpencil.data.gift/id/concept/JobStatus/success',
+        failed: 'http://redpencil.data.gift/id/concept/JobStatus/failed'
       },
       maxRetryCount: 5,
+      rdfType: 'http://mu.semte.ch/vocabularies/ext/PublicExportJob'
     },
     resourceUri: {
       public: function(type, id) { return `http://themis.vlaanderen.be/id/${type}/${id}`; }
