@@ -181,12 +181,10 @@ async function executeJob(job) {
     await updateJobStatus(job.uri, config.export.job.statuses.success);
     console.log(`Successfully finished job <${job.uri}>`);
   } catch (e) {
-    console.log(
-      `Execution of job <${job.uri}> failed [tries: ${job.retryCount + 1}/${config.export.job.maxRetryCount}]: ${e}`
-    );
+    const errorMessage = `Execution of job <${job.uri}> failed [tries: ${job.retryCount + 1}/${config.export.job.maxRetryCount}]: ${e?.message}`;
+    console.log(errorMessage);
     console.trace(e);
-    // TODO message on fail? we could check this in frontend maybe?
-    await updateJobStatus(job.uri, config.export.job.statuses.failed);
+    await updateJobStatus(job.uri, config.export.job.statuses.failed, errorMessage);
     await incrementJobRetryCount(job.uri, job.retryCount);
   }
 }
