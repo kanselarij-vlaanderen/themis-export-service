@@ -373,9 +373,14 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
         GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
           <${kaleidosNewsitem}> prov:wasDerivedFrom ?agendaitemTreatment .
           ?agendaitemTreatment dct:subject <${kaleidosAgendaitem}> .
-          ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> ;
-                          besluitvorming:vindtPlaatsTijdens ?subcase .
-          ?subcase ext:heeftBevoegde ?uri .
+          OPTIONAL {
+            # legacy data may not have agendaActivity or subcase
+            ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> ;
+                            besluitvorming:vindtPlaatsTijdens ?subcase .
+            ?subcase ext:heeftBevoegde ?subcaseMandateesUri .
+          }
+          <${kaleidosAgendaitem}> ext:heeftBevoegdeVoorAgendapunt ?agendaitemMandateesUri .
+          BIND(COALESCE(?subcaseMandateesUri , ?agendaitemMandateesUri) AS ?uri)
         }
         GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.public)} {
           OPTIONAL {
@@ -439,7 +444,7 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
       GRAPH ${sparqlEscapeUri(config.kaleidos.graphs.kanselarij)} {
         <${kaleidosNewsitem}> prov:wasDerivedFrom ?agendaitemTreatment .
         ?agendaitemTreatment dct:subject <${kaleidosAgendaitem}> .
-        ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> .
+        OPTIONAL { ?agendaActivity besluitvorming:genereertAgendapunt <${kaleidosAgendaitem}> . } # legacy may not have agendaActivity
         <${kaleidosAgendaitem}> besluitvorming:geagendeerdStuk ?piece .
         ?piece besluitvorming:vertrouwelijkheidsniveau <${config.kaleidos.accessLevels.public}> .
       }
