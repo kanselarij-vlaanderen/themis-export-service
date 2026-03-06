@@ -210,8 +210,8 @@ async function updateJobStatus(uri, status, errorMessage) {
     timePred = 'http://www.w3.org/ns/prov#startedAtTime';
   }
   await update(`
-  PREFIX dct: <http://purl.org/dc/terms/>
   PREFIX adms: <http://www.w3.org/ns/adms#>
+  PREFIX schema: <http://schema.org/>
 
   DELETE {
     GRAPH <${config.export.graphs.job}> {
