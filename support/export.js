@@ -1,4 +1,4 @@
-import { sparqlEscapeUri, sparqlEscapeDateTime, uuid } from 'mu';
+import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, uuid } from 'mu';
 import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import groupBy from 'lodash.groupby';
 import uniq from 'lodash.uniq';
@@ -45,7 +45,7 @@ async function generateExport(job) {
   await writeToFile(job.graph, file);
   await addGraph(job.graph, config.export.graphs.public); // publication activity data is required for next runs
   await cleanGraph(job.graph);
-  await createTtlToDeltaTask([file]);
+  await createTtlToDeltaTask([file], meeting.uri);
   return publication.uri;
 }
 
@@ -235,7 +235,7 @@ function sortByAgendaitemAndNumber(newsitems, baseNumber = 0) {
   return newsitems;
 }
 
-async function createTtlToDeltaTask(files) {
+async function createTtlToDeltaTask(files, meetingUri) {
   const status = 'http://redpencil.data.gift/ttl-to-delta-tasks/8C7E9155-B467-49A4-B047-7764FE5401F7'; // not started
   const taskUuid = uuid();
   const taskUri = `<http://data.kaleidos.vlaanderen.be/ttl-to-delta-tasks/${taskUuid}>`;
@@ -246,7 +246,10 @@ async function createTtlToDeltaTask(files) {
       const fileUri = `<http://data.kaleidos.vlaanderen.be/files/${fileUuid}>`;
       const physicalFileUri = file.replace(config.export.directory, 'share://');
       return `
-        ${taskUri} prov:used ${fileUri}.
+        ${taskUri} prov:used ${fileUri} .
+        ${taskUri} mu:uuid ${sparqlEscapeString(taskUuid)} .
+        ${taskUri} dct:created ${sparqlEscapeDateTime(new Date())} .
+        ${meetingUri ? `${taskUri} dct:subject ${sparqlEscapeUri(meetingUri)} .` : ''}
         ${sparqlEscapeUri(physicalFileUri)} nie:dataSource ${fileUri}.
         ${sparqlEscapeUri(physicalFileUri)} dct:created ${sparqlEscapeDateTime(new Date())} .
     `;
@@ -258,6 +261,7 @@ async function createTtlToDeltaTask(files) {
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
       PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
       INSERT DATA {
         GRAPH <${config.export.graphs.public}> {
           ${taskUri} a <http://mu.semte.ch/vocabularies/ext/TtlToDeltaTask>;
