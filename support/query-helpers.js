@@ -49,7 +49,7 @@ async function copyToLocalGraph(query, graph) {
     }
   } catch (e) {
     console.log(`Something went wrong while executing query: ${query}. Nothing inserted in the store.`);
-    console.log(e);
+    console.trace(e);
     throw e;
   }
 }

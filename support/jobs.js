@@ -60,12 +60,11 @@ async function createJob(meeting, scopes, source = null) {
 
   INSERT DATA {
     GRAPH <${config.export.graphs.job}> {
-        ${sparqlEscapeUri(jobUri)} a ext:PublicExportJob ;
+        ${sparqlEscapeUri(jobUri)} a ${sparqlEscapeUri(config.export.job.rdfType)} ;
                            mu:uuid ${sparqlEscapeString(jobUuid)} ;
                            prov:used ${sparqlEscapeUri(meeting)} ;
                            adms:status ${sparqlEscapeUri(config.export.job.statuses.scheduled)} ;
-                           dct:created ${sparqlEscapeDateTime(now)} ;
-                           dct:modified ${sparqlEscapeDateTime(now)} .
+                           dct:created ${sparqlEscapeDateTime(now)} .
         ${scopeStatements.join('\n')}
         ${sourceStatement}
     }
@@ -90,9 +89,9 @@ async function getNextScheduledJob() {
     GRAPH <${config.export.graphs.job}> {
       VALUES ?status {
         ${sparqlEscapeUri(config.export.job.statuses.scheduled)}
-        ${sparqlEscapeUri(config.export.job.statuses.failure)}
+        ${sparqlEscapeUri(config.export.job.statuses.failed)}
       }
-      ?uri a ext:PublicExportJob ;
+      ?uri a ${sparqlEscapeUri(config.export.job.rdfType)} ;
            mu:uuid ?id ;
            dct:created ?created ;
            prov:used ?meeting ;
@@ -101,8 +100,8 @@ async function getNextScheduledJob() {
       BIND(IF(BOUND(?maybeRetryCount), ?maybeRetryCount, 0) AS ?retryCount)
       FILTER (?retryCount < ${sparqlEscapeInt(config.export.job.maxRetryCount)})
       FILTER NOT EXISTS {
-        ?job a ext:PublicExportJob ;
-           adms:status ${sparqlEscapeUri(config.export.job.statuses.ongoing)} .
+        ?job a ${sparqlEscapeUri(config.export.job.rdfType)} ;
+           adms:status ${sparqlEscapeUri(config.export.job.statuses.busy)} .
       }
     }
   } ORDER BY ASC(?created) LIMIT 1`);
@@ -131,7 +130,7 @@ async function getJob(uuid) {
   SELECT ?uri ?created ?meeting ?status
   WHERE {
     GRAPH <${config.export.graphs.job}> {
-      ?uri a ext:PublicExportJob ;
+      ?uri a ${sparqlEscapeUri(config.export.job.rdfType)} ;
            mu:uuid ${sparqlEscapeString(uuid)} ;
            dct:created ?created ;
            prov:used ?meeting ;
@@ -155,7 +154,7 @@ async function getJob(uuid) {
 
 async function executeJob(job) {
   try {
-    await updateJobStatus(job.uri, config.export.job.statuses.ongoing);
+    await updateJobStatus(job.uri, config.export.job.statuses.busy);
     const result = await query(`
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
@@ -182,35 +181,49 @@ async function executeJob(job) {
     await updateJobStatus(job.uri, config.export.job.statuses.success);
     console.log(`Successfully finished job <${job.uri}>`);
   } catch (e) {
-    console.log(
-      `Execution of job <${job.uri}> failed [tries: ${job.retryCount + 1}/${config.export.job.maxRetryCount}]: ${e}`
-    );
+    const errorMessage = `Execution of job <${job.uri}> failed [tries: ${job.retryCount + 1}/${config.export.job.maxRetryCount}]: ${e?.message}`;
+    console.log(errorMessage);
     console.trace(e);
-    await updateJobStatus(job.uri, config.export.job.statuses.failure);
+    await updateJobStatus(job.uri, config.export.job.statuses.failed, errorMessage);
     await incrementJobRetryCount(job.uri, job.retryCount);
   }
 }
 
 async function getSummary() {
   const result = await query(`
+    PREFIX adms: <http://www.w3.org/ns/adms#>
+
     SELECT ?status (COUNT(?s) as ?count) WHERE {
-      GRAPH <http://mu.semte.ch/graphs/kaleidos-export> {
-        ?s a <http://mu.semte.ch/vocabularies/ext/PublicExportJob> ;  <http://www.w3.org/ns/adms#status> ?status .
+      GRAPH <${config.export.graphs.job}> {
+        ?s a ${sparqlEscapeUri(config.export.job.rdfType)} ;  adms:status ?status .
       }
     } GROUP BY ?status`);
 
   return result.results.bindings.map(b => { return { status: b['status'].value, count: parseInt(b['count'].value) }; });
 }
 
-async function updateJobStatus(uri, status) {
+async function updateJobStatus(uri, status, errorMessage) {
+  let timePred;
+  if (status === JOB.STATUSES.SUCCESS || status === JOB.STATUSES.FAILED) {
+    timePred = 'http://www.w3.org/ns/prov#endedAtTime';
+  } else {
+    timePred = 'http://www.w3.org/ns/prov#startedAtTime';
+  }
   await update(`
-  PREFIX dct: <http://purl.org/dc/terms/>
   PREFIX adms: <http://www.w3.org/ns/adms#>
+  PREFIX schema: <http://schema.org/>
 
-  DELETE WHERE {
+  DELETE {
     GRAPH <${config.export.graphs.job}> {
-        ${sparqlEscapeUri(uri)} dct:modified ?modified ;
-             adms:status ?status.
+      ${sparqlEscapeUri(uri)} adms:status ?status .
+      ${sparqlEscapeUri(uri)} ${sparqlEscapeUri(timePred)} ?time .
+    }
+  } WHERE {
+    GRAPH <${config.export.graphs.job}> {
+      ${sparqlEscapeUri(uri)} adms:status ?status .
+      OPTIONAL {
+        ${sparqlEscapeUri(uri)} ${sparqlEscapeUri(timePred)} ?time .
+      }
     }
   }
 
@@ -218,7 +231,8 @@ async function updateJobStatus(uri, status) {
 
   INSERT DATA {
     GRAPH <${config.export.graphs.job}> {
-        ${sparqlEscapeUri(uri)} dct:modified ${sparqlEscapeDateTime(new Date())};
+        ${sparqlEscapeUri(uri)} ${sparqlEscapeUri(timePred)} ${sparqlEscapeDateTime(new Date())} ;
+        ${errorMessage ? `schema:error ${sparqlEscapeString(errorMessage)} ;` : ""}
              adms:status ${sparqlEscapeUri(status)}.
     }
   }`);

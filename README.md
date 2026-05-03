@@ -57,10 +57,10 @@ Resource representing an export job. Jobs are executed one by one using the FIFO
 
 #### Export job statuses
 The status of the export job will be updated to reflect the progress of the job. The following statuses are known:
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/scheduled
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/ongoing
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/success
-* http://data.kaleidos.vlaanderen.be/public-export-job-statuses/failure
+* http://redpencil.data.gift/id/concept/JobStatus/scheduled
+* http://redpencil.data.gift/id/concept/JobStatus/busy
+* http://redpencil.data.gift/id/concept/JobStatus/success
+* http://redpencil.data.gift/id/concept/JobStatus/failed
 
 #### Themis publication activity
 Resource respresenting a planned publication for a meeting. This resource resides in the Kaleidos DB.
