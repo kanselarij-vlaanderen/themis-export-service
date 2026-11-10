@@ -1,5 +1,4 @@
-import { querySudo as query } from '@lblod/mu-auth-sudo';
-import { sparqlEscapeUri, sparqlEscapeDateTime } from 'mu';
+import { sparqlEscapeUri, sparqlEscapeDateTime, query } from 'mu';
 import { parseResult } from './query-helpers';
 import config from '../config.js';
 
@@ -48,7 +47,7 @@ async function getRecentPublicationActivities() {
         FILTER NOT EXISTS { ?job a ext:PublicExportJob ; dct:source ?uri }
       }
     } ORDER BY ?plannedStart
-  `);
+  `, { sudo: true });
 
   const publicationActivities = result.results.bindings.map((b) => {
     return {
@@ -75,7 +74,7 @@ async function getScope(publicationActivity) {
           ext:scope ?label .
       }
     }
-  `));
+  `, { sudo: true }));
 
   return scope.map(s => s.label);
 }

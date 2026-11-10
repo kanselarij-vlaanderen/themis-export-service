@@ -7,10 +7,11 @@ Add the following snippet to your `docker-compose.yml`:
 ```yml
   themis-export:
     image: kanselarij-vlaanderen/themis-export-service
-    links:
-      - database:database
     volumes:
       - ./data/exports/:/share
+    environment:
+      ALLOW_MU_AUTH_SUDO: "true"
+      ALLOW_SPARQL_CLIENT_2: "true"
 ```
 
 The final result of the export will be written to the volume mounted in `/share`.

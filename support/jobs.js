@@ -1,5 +1,4 @@
-import { sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeInt, uuid } from 'mu';
-import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
+import { sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeInt, uuid, query, update } from 'mu';
 import { generateExport } from './export';
 import config from '../config';
 
@@ -69,7 +68,7 @@ async function createJob(meeting, scopes, source = null) {
         ${scopeStatements.join('\n')}
         ${sourceStatement}
     }
-  }`);
+  }`, { sudo: true });
 
   return {
     id: jobUuid,
@@ -105,7 +104,7 @@ async function getNextScheduledJob() {
            adms:status ${sparqlEscapeUri(config.export.job.statuses.ongoing)} .
       }
     }
-  } ORDER BY ASC(?created) LIMIT 1`);
+  } ORDER BY ASC(?created) LIMIT 1`, { sudo: true });
 
   const bindings = result.results.bindings;
   if (bindings.length == 1) {
@@ -137,7 +136,7 @@ async function getJob(uuid) {
            prov:used ?meeting ;
            adms:status ?status .
     }
-  } LIMIT 1`);
+  } LIMIT 1`, { sudo: true });
 
   const bindings = result.results.bindings;
   if (bindings.length == 1) {
@@ -164,7 +163,7 @@ async function executeJob(job) {
       GRAPH <${config.export.graphs.job}> {
         ${sparqlEscapeUri(job.uri)} ext:scope ?scope .
       }
-    }`);
+    }`, { sudo: true });
 
     if (result.results.bindings.length) {
       job.scope = result.results.bindings.map(b => b['scope'].value);
@@ -197,7 +196,7 @@ async function getSummary() {
       GRAPH <http://mu.semte.ch/graphs/kaleidos-export> {
         ?s a <http://mu.semte.ch/vocabularies/ext/PublicExportJob> ;  <http://www.w3.org/ns/adms#status> ?status .
       }
-    } GROUP BY ?status`);
+    } GROUP BY ?status`, { sudo: true });
 
   return result.results.bindings.map(b => { return { status: b['status'].value, count: parseInt(b['count'].value) }; });
 }
@@ -221,7 +220,7 @@ async function updateJobStatus(uri, status) {
         ${sparqlEscapeUri(uri)} dct:modified ${sparqlEscapeDateTime(new Date())};
              adms:status ${sparqlEscapeUri(status)}.
     }
-  }`);
+  }`, { sudo: true });
 }
 
 
@@ -233,7 +232,7 @@ async function setGeneratedResource(uri, resource) {
     GRAPH <${config.export.graphs.job}> {
         ${sparqlEscapeUri(uri)} prov:generated ${sparqlEscapeUri(resource)}.
     }
-  }`);
+  }`, { sudo: true });
 }
 
 async function incrementJobRetryCount(uri, retryCount) {
@@ -243,7 +242,7 @@ async function incrementJobRetryCount(uri, retryCount) {
     GRAPH <${config.export.graphs.job}> {
       ${sparqlEscapeUri(uri)} ext:retryCount ?retryCount .
     }
-  }`);
+  }`, { sudo: true });
 
   await update(`
   PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -251,7 +250,7 @@ async function incrementJobRetryCount(uri, retryCount) {
     GRAPH <${config.export.graphs.job}> {
       ${sparqlEscapeUri(uri)} ext:retryCount ${sparqlEscapeInt(retryCount + 1)}
     }
-  }`);
+  }`, { sudo: true });
 }
 
 export {

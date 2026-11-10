@@ -1,7 +1,6 @@
-import { uuid, sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeInt } from 'mu';
+import { uuid, sparqlEscapeString, sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeInt, query } from 'mu';
 // All intermediate data is written directly to Virtuoso in order to not generate delta notifications for these data insertions
 // Virtuoso is just used here as a temporary store to gather data before writing it to a file
-import { querySudo } from '@lblod/mu-auth-sudo';
 import { updateVirtuoso } from './virtuoso';
 import { parseResult, copyToLocalGraph } from './query-helpers';
 import config from '../config.js';
@@ -13,7 +12,7 @@ async function getMeeting({ uri, id }) {
   } else {
     subjectStatement = `?uri mu:uuid ${sparqlEscapeString(id)} .`;
   }
-  const sessions = parseResult(await querySudo(`
+  const sessions = parseResult(await query(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -29,7 +28,7 @@ async function getMeeting({ uri, id }) {
         OPTIONAL { ?uri dct:type ?type . }
       }
     }
-  `));
+  `, { sudo: true }));
   return sessions.length ? sessions[0] : null;
 }
 
@@ -124,7 +123,7 @@ async function insertPublicationActivity(meeting, graph) {
 }
 
 async function getPreviousPublicationActivity(meeting) {
-  const publications = parseResult(await querySudo(`
+  const publications = parseResult(await query(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -137,13 +136,13 @@ async function getPreviousPublicationActivity(meeting) {
           dct:type ${sparqlEscapeUri(config.export.codelists.activityType.publication)} ;
           prov:used ${sparqlEscapeUri(meeting)} .
       }
-    } ORDER BY DESC(?start) LIMIT 1`));
+    } ORDER BY DESC(?start) LIMIT 1`, { sudo: true }));
 
   return publications.length ? publications[0] : null;
 }
 
 async function getLatestAgendaOfMeeting(meeting) {
-  let agendas = parseResult(await querySudo(`
+  let agendas = parseResult(await query(`
     PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
 
@@ -152,11 +151,11 @@ async function getLatestAgendaOfMeeting(meeting) {
         besluitvorming:volgnummer ?serialNumber ;
         dct:title ?title .
     } ORDER BY DESC(?serialNumber) LIMIT 1
-  `));
+  `, { sudo: true }));
 
   if (!agendas.length) {
     console.log(`No agenda found. Trying pre-Kaleidos query to retrieve agenda for meeting <${meeting}>`);
-    agendas = parseResult(await querySudo(`
+    agendas = parseResult(await query(`
     PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -165,7 +164,7 @@ async function getLatestAgendaOfMeeting(meeting) {
       ?uri besluitvorming:isAgendaVoor ${sparqlEscapeUri(meeting)} ;
            ext:finaleVersie "true"^^<http://mu.semte.ch/vocabularies/typed-literals/boolean> .
      }
-    `));
+    `, { sudo: true }));
   }
   return agendas.length ? agendas[0] : null;
 }
@@ -222,7 +221,7 @@ async function insertPublicAgenda(kaleidosAgenda, meeting, publication, previous
 }
 
 async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
-  return parseResult(await querySudo(`
+  return parseResult(await query(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -244,7 +243,7 @@ async function getAgendaitemsWithNewsletterInfo(kaleidosAgenda) {
         OPTIONAL { ?agendaitem dct:type ?type . }
         OPTIONAL { ?agendaitem besluit:aangebrachtNa ?previousAgendaitem . }
       }
-    }`));
+    }`, { sudo: true }));
 }
 
 async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, publication, previousPublication, graph) {
@@ -328,7 +327,7 @@ async function insertPublicAgendaitems(kaleidosAgendaitems, publicAgenda, public
 }
 
 async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
-  const newsitems = parseResult(await querySudo(`
+  const newsitems = parseResult(await query(`
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -343,14 +342,14 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
         OPTIONAL { <${kaleidosNewsitem}> prov:value ?text . }
         OPTIONAL { <${kaleidosNewsitem}> dct:alternative ?alternative . }
       }
-    }`));
+    }`, { sudo: true }));
 
   const newsitem = newsitems.length ? newsitems[0] : null;
 
   if (newsitem) {
     newsitem.uri = kaleidosNewsitem;
 
-    newsitem.themes = parseResult(await querySudo(`
+    newsitem.themes = parseResult(await query(`
       PREFIX dct: <http://purl.org/dc/terms/>
 
       SELECT ?uri
@@ -359,9 +358,9 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
           <${kaleidosNewsitem}> dct:subject ?uri .
         }
       }
-    `));
+    `, { sudo: true }));
 
-    newsitem.mandatees = parseResult(await querySudo(`
+    newsitem.mandatees = parseResult(await query(`
       PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
       PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -383,7 +382,7 @@ async function getNewsitem(kaleidosNewsitem, kaleidosAgendaitem) {
           }
         }
       }
-    `));
+    `, { sudo: true }));
   }
 
   return newsitem;
@@ -429,7 +428,7 @@ async function insertNewsitem(newsitem, graph) {
 }
 
 async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
-  return parseResult(await querySudo(`
+  return parseResult(await query(`
     PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -444,7 +443,7 @@ async function getPublicDocuments(kaleidosNewsitem, kaleidosAgendaitem) {
         ?piece besluitvorming:vertrouwelijkheidsniveau <${config.kaleidos.accessLevels.public}> .
       }
     }
-  `));
+  `, { sudo: true }));
 }
 
 async function insertDocuments(kaleidosPieces, agendaitem, graph) {
